@@ -1,6 +1,7 @@
 
 (() => {
   const payload = window.INBOUND_DATA || { days: [], history: [], availableDates: [] };
+  const dayLoaders = new Map();
   const params = new URLSearchParams(location.search);
   const brandColors = { "陈陈": "#6ee7d2", "鹭青一": "#9cc7ff", "周淼": "#e8c170", "未识别": "#ffb19b" };
   const businessTypes = ["成衣", "加工", "外采", "未标注"];
@@ -50,7 +51,7 @@
     return map;
   }, new Map());
 
-  function recordsForDateRange() {
+  function datesForCurrentRange() {
     if (!payload.days.length) return [];
     const selected = currentDay().date;
     let dates = [selected];
@@ -59,7 +60,43 @@
     if (state.range === "custom" && state.customStart && state.customEnd) {
       dates = payload.availableDates.filter(date => date >= state.customStart && date <= state.customEnd);
     }
+    return dates;
+  }
+
+  function recordsForDateRange() {
+    const dates = datesForCurrentRange();
     return payload.days.filter(day => dates.includes(day.date)).flatMap(day => day.records);
+  }
+
+  async function loadDayRecords(date) {
+    const day = dayByDate(date);
+    if (!date || !day || (Array.isArray(day.records) && day.records.length)) return true;
+    if (dayLoaders.has(date)) return dayLoaders.get(date);
+    const file = payload.recordFiles?.[date] || `../../assets/inbound/inbound-records-${date}.json`;
+    const loader = fetch(file)
+      .then(response => {
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return response.json();
+      })
+      .then(data => {
+        day.records = Array.isArray(data.records) ? data.records : [];
+        return true;
+      })
+      .catch(error => {
+        console.error(error);
+        day.records = [];
+        return false;
+      });
+    dayLoaders.set(date, loader);
+    return loader;
+  }
+
+  async function ensureCurrentRangeRecords() {
+    const dates = datesForCurrentRange();
+    if (!dates.length) return;
+    const statusNode = $("importStatus");
+    if (statusNode) statusNode.innerHTML = `<span>正在加载 ${dates.length} 天入库明细...</span>`;
+    await Promise.all(dates.map(loadDayRecords));
   }
 
   function filteredRecords() {
@@ -146,7 +183,9 @@
     for (let day = 1; day <= daysInMonth; day += 1) {
       const dateText = `${monthPrefix}-${String(day).padStart(2, "0")}`;
       const dayData = daysByDate.get(dateText);
-      const sum = dayData ? summary(dayData.records || []) : null;
+      const sum = dayData
+        ? { ...summary(dayData.records || []), quantity: dayData.quantity ?? summary(dayData.records || []).quantity, records: dayData.recordCount ?? summary(dayData.records || []).records }
+        : null;
       const className = `calendar-day${dayData ? " has-data" : ""}${dateText === state.selectedDate ? " active" : ""}`;
       const label = dayData ? `${dateText}，入库数量 ${fmt(sum.quantity)}，明细 ${fmt(sum.records)}` : `${dateText}，无数据`;
       cells.push(dayData
@@ -154,7 +193,11 @@
         : `<span class="${className}" aria-label="${esc(label)}">${day}</span>`);
     }
 
-    const selectedSummary = summary(selectedDay.records || []);
+    const selectedSummary = {
+      ...summary(selectedDay.records || []),
+      quantity: selectedDay.quantity ?? summary(selectedDay.records || []).quantity,
+      records: selectedDay.recordCount ?? summary(selectedDay.records || []).records,
+    };
     container.innerHTML = `
       <div class="calendar-shell">
         <div class="calendar-monthbar">
@@ -611,7 +654,11 @@
     history.replaceState(null, "", url);
   }
 
-  function render() {
+  let renderToken = 0;
+  async function render() {
+    const token = ++renderToken;
+    await ensureCurrentRangeRecords();
+    if (token !== renderToken) return;
     syncUrl();
     const day = currentDay();
     const rangeRecords = recordsForDateRange();
