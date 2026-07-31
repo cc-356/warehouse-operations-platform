@@ -1314,7 +1314,9 @@
 
     async function setup() {
       renderDateNavigator();
-      renderMissingRecords(activeDateText());
+      renderLoadingState(activeDateText());
+      await loadRecordsForDate(activeDateText());
+      applyActiveRecords();
       const dateSidebar = $("dateSidebar");
       const datePanelToggle = $("datePanelToggle");
       if (dateSidebar && datePanelToggle) {
@@ -1355,7 +1357,8 @@
       $("nextPage").addEventListener("click", () => { page += 1; renderTable(baseFilteredRecords()); });
       renderColumnMenu();
       syncControls();
-      render();
+      if (allRecords.length) render();
+      else renderMissingRecords(activeDateText());
       document.body.classList.remove("skeleton");
     }
 
