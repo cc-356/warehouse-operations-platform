@@ -1,0 +1,651 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>仓库运营管理平台 - 运营驾驶舱</title>
+  <style>
+    :root {
+      --bg: #070b0d;
+      --paper: rgba(15, 20, 22, 0.74);
+      --paper-strong: rgba(24, 31, 34, 0.86);
+      --ink: #eef5f1;
+      --muted: #8a9a96;
+      --line: rgba(210, 235, 225, 0.12);
+      --accent: #6ee7d2;
+      --accent-strong: #c9fff4;
+      --accent-soft: rgba(73, 211, 190, 0.13);
+      --warn: #ffb19b;
+      --shadow: 0 26px 90px rgba(0, 0, 0, 0.42);
+      --radius: 26px;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      font: 15px/1.6 "IBM Plex Sans", "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: linear-gradient(180deg, #05071c 0%, #071033 46%, #03060f 100%);
+      overflow-x: hidden;
+    }
+    .lightfall-stage {
+      position: fixed;
+      inset: 0;
+      z-index: -2;
+      overflow: hidden;
+      background: radial-gradient(circle at 50% 42%, #0A29FF 0%, #071033 42%, #03060f 100%);
+    }
+    .lightfall-stage canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      opacity: .95;
+      mix-blend-mode: screen;
+    }
+    .lightfall-mask {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 50% 42%, rgba(82, 39, 255, 0.18), transparent 34%),
+        radial-gradient(circle at 68% 18%, rgba(255, 159, 252, 0.10), transparent 28%),
+        linear-gradient(180deg, rgba(4, 7, 28, 0.12), rgba(3, 6, 15, 0.84));
+    }
+    .page {
+      width: min(1700px, 100%);
+      min-height: 100vh;
+      margin: 0 auto;
+      padding: 24px 24px 64px;
+    }
+    .platform-header, .metric {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+    }
+    .side-panel, .module-card {
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      box-shadow: 0 28px 70px rgba(0, 0, 0, 0.26), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+      backdrop-filter: blur(22px) saturate(145%);
+      -webkit-backdrop-filter: blur(22px) saturate(145%);
+    }
+    .platform-header {
+      min-height: 72px;
+      margin-bottom: 20px;
+      padding: 12px 16px;
+      border-radius: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      background: linear-gradient(180deg, rgba(15, 25, 27, 0.88), rgba(9, 17, 19, 0.76));
+    }
+    .platform-identity {
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .platform-mark {
+      width: 40px;
+      height: 40px;
+      border: 1px solid rgba(255, 255, 255, 0.72);
+      border-radius: 8px;
+      display: block;
+      object-fit: contain;
+      flex: 0 0 auto;
+      background: #fff;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.86), 0 12px 34px rgba(0,0,0,.22);
+    }
+    .platform-title {
+      min-width: 0;
+      display: grid;
+      gap: 5px;
+    }
+    .platform-title strong {
+      color: var(--ink);
+      font-size: 16px;
+      line-height: 1.2;
+    }
+    .platform-breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 13px;
+      white-space: nowrap;
+    }
+    .platform-breadcrumb span:last-child {
+      color: var(--accent-strong);
+    }
+    .module-state {
+      min-height: 36px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      border: 1px solid rgba(110, 231, 210, 0.16);
+      color: var(--accent-strong);
+      background: rgba(110, 231, 210, 0.08);
+      font-size: 13px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .hero {
+      min-height: calc(100vh - 180px);
+      display: block;
+    }
+    .eyebrow, .panel-label {
+      display: inline-flex;
+      margin-bottom: 10px;
+      color: var(--accent-strong);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+    h1, h2, h3, p {
+      margin: 0;
+    }
+    h1 {
+      max-width: 860px;
+      font-size: clamp(42px, 7vw, 104px);
+      line-height: .93;
+      letter-spacing: 0;
+    }
+    .hero-copy {
+      max-width: 760px;
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.75;
+    }
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .metric {
+      min-height: 110px;
+      padding: 18px;
+      border-radius: 18px;
+      background: rgba(255,255,255,0.035);
+    }
+    .metric span {
+      display: block;
+      color: var(--muted);
+      font-size: 13px;
+      white-space: nowrap;
+    }
+    .metric strong {
+      display: block;
+      margin-top: 14px;
+      color: var(--ink);
+      font-size: 30px;
+      line-height: 1;
+      letter-spacing: 0;
+    }
+    .module-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .module-card {
+      min-height: 118px;
+      padding: 14px 16px;
+      border-radius: 14px;
+      display: grid;
+      align-content: start;
+      gap: 8px;
+      color: inherit;
+      text-decoration: none;
+      background: linear-gradient(145deg, rgba(255,255,255,0.12), rgba(255,255,255,0.045));
+      transition: transform 160ms ease, border-color 160ms ease, background 160ms ease, box-shadow 160ms ease;
+    }
+    .module-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(168, 255, 238, 0.34);
+      background: linear-gradient(145deg, rgba(110, 231, 210, 0.20), rgba(255,255,255,0.07));
+      box-shadow: 0 18px 42px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255,255,255,0.18);
+    }
+    .module-card strong {
+      color: var(--ink);
+      font-size: 18px;
+      line-height: 1.22;
+    }
+    .module-card p {
+      color: var(--muted);
+      line-height: 1.45;
+      font-size: 12px;
+    }
+    .side-panel {
+      padding: 18px;
+      border-radius: 22px;
+      background: linear-gradient(145deg, rgba(18, 26, 29, 0.38), rgba(8, 14, 16, 0.24));
+      overflow: hidden;
+    }
+    .status-pill {
+      padding: 8px 12px;
+      border: 1px solid rgba(255, 177, 155, 0.22);
+      border-radius: 999px;
+      color: var(--warn);
+      background: rgba(255, 177, 155, 0.08);
+      font-size: 13px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+    .note-list {
+      display: grid;
+      gap: 12px;
+      align-content: start;
+    }
+    .note-item {
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: rgba(255,255,255,0.035);
+    }
+    .note-item strong {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--accent-strong);
+      font-size: 13px;
+    }
+    .note-item p {
+      color: var(--muted);
+      line-height: 1.72;
+      font-size: 13px;
+    }
+    code {
+      color: var(--ink);
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 12px;
+      word-break: break-all;
+    }
+    @media (max-width: 1180px) {
+      .hero {
+        grid-template-columns: 1fr;
+      }
+      .hero {
+        min-height: auto;
+      }
+    }
+    @media (max-width: 760px) {
+      .page {
+        padding: 16px;
+      }
+      .platform-header {
+        align-items: stretch;
+        flex-direction: column;
+      }
+      .side-panel {
+        padding: 20px;
+      }
+      .module-grid, .metric-grid {
+        grid-template-columns: 1fr;
+      }
+      h1 {
+        font-size: 46px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="lightfall-stage" id="lightfall-stage" aria-hidden="true"></div>
+  <div class="lightfall-mask" aria-hidden="true"></div>
+
+  <div class="page">
+    <header class="platform-header">
+      <div class="platform-identity">
+        <img class="platform-mark" src="assets/jingtang-warehouse-logo-clear.png" alt="井唐仓储" />
+        <div class="platform-title">
+          <strong>仓库运营管理平台</strong>
+          <div class="platform-breadcrumb">
+            <span>本地运营中心</span>
+            <span>/</span>
+            <span>运营驾驶舱</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="hero">
+      <section class="side-panel">
+        <div class="module-grid">
+          <a class="module-card" href="modules/workforce/index.html">
+            <strong>员工工作量与人效</strong>
+            <p>人员工作量、工种汇总、效率与历史趋势</p>
+          </a>
+          <a class="module-card" href="modules/inventory/index.html">
+            <strong>库存管理</strong>
+            <p>五仓库存快照、Top SKU、库位库存与日期切换</p>
+          </a>
+          <a class="module-card" href="modules/inbound/index.html">
+            <strong>入库管理</strong>
+            <p>采购到货、收货、上架与入库差异追踪</p>
+          </a>
+          <a class="module-card" href="modules/outbound/index.html">
+            <strong>出库管理</strong>
+            <p>拣货、复核、称重、打包与发货流程看板</p>
+          </a>
+          <a class="module-card" href="modules/quality/index.html">
+            <strong>质量管理</strong>
+            <p>差错、复核、异常与质量改进记录</p>
+          </a>
+          <a class="module-card" href="modules/equipment/index.html">
+            <strong>设备管理</strong>
+            <p>仓储设备状态、维护与使用记录</p>
+          </a>
+          <a class="module-card" href="modules/cost/index.html">
+            <strong>成本管理</strong>
+            <p>人工、耗材、物流与运营成本分析</p>
+          </a>
+          <a class="module-card" href="modules/scheduling/index.html">
+            <strong>排班管理</strong>
+            <p>班次、出勤、工时与人员安排</p>
+          </a>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    (() => {
+      const container = document.getElementById("lightfall-stage");
+      if (!container) return;
+
+      const MAX_COLORS = 8;
+      const colors = ["#A6C8FF", "#5227FF", "#FF9FFC"];
+      const backgroundColor = "#0A29FF";
+      const speed = 1;
+      const streakCount = 8;
+      const streakWidth = 1;
+      const streakLength = 1;
+      const glow = 1;
+      const density = 1;
+      const twinkle = 1;
+      const zoom = 2.6;
+      const backgroundGlow = 0;
+      const opacity = 1;
+      const mouseInteraction = false;
+      const mouseStrength = 1;
+      const mouseRadius = 0.6;
+      const mouseDampening = 0.15;
+
+      const hexToRGB = hex => {
+        const c = hex.replace("#", "").padEnd(6, "0");
+        return [
+          parseInt(c.slice(0, 2), 16) / 255,
+          parseInt(c.slice(2, 4), 16) / 255,
+          parseInt(c.slice(4, 6), 16) / 255
+        ];
+      };
+
+      const prepColors = input => {
+        const base = (input && input.length ? input : ["#A6C8FF", "#5227FF", "#FF9FFC"]).slice(0, MAX_COLORS);
+        const count = base.length;
+        const arr = [];
+        for (let i = 0; i < MAX_COLORS; i++) arr.push(hexToRGB(base[Math.min(i, base.length - 1)]));
+        const avg = [0, 0, 0];
+        for (let i = 0; i < count; i++) {
+          avg[0] += arr[i][0];
+          avg[1] += arr[i][1];
+          avg[2] += arr[i][2];
+        }
+        avg[0] /= count;
+        avg[1] /= count;
+        avg[2] /= count;
+        return { arr, count, avg };
+      };
+
+      const vertex = `
+        attribute vec2 position;
+        varying vec2 vUv;
+        void main() {
+          vUv = position * 0.5 + 0.5;
+          gl_Position = vec4(position, 0.0, 1.0);
+        }
+      `;
+
+      const fragment = `
+        precision highp float;
+        uniform vec3 iResolution;
+        uniform vec2 iMouse;
+        uniform float iTime;
+        uniform vec3 uColor0;
+        uniform vec3 uColor1;
+        uniform vec3 uColor2;
+        uniform vec3 uColor3;
+        uniform vec3 uColor4;
+        uniform vec3 uColor5;
+        uniform vec3 uColor6;
+        uniform vec3 uColor7;
+        uniform int uColorCount;
+        uniform vec3 uBgColor;
+        uniform vec3 uMouseColor;
+        uniform float uSpeed;
+        uniform int uStreakCount;
+        uniform float uStreakWidth;
+        uniform float uStreakLength;
+        uniform float uGlow;
+        uniform float uDensity;
+        uniform float uTwinkle;
+        uniform float uZoom;
+        uniform float uBgGlow;
+        uniform float uOpacity;
+        uniform float uMouseEnabled;
+        uniform float uMouseStrength;
+        uniform float uMouseRadius;
+        varying vec2 vUv;
+
+        vec3 palette(float h) {
+          int count = uColorCount;
+          if (count < 1) count = 1;
+          int idx = int(floor(clamp(h, 0.0, 0.999999) * float(count)));
+          if (idx <= 0) return uColor0;
+          if (idx == 1) return uColor1;
+          if (idx == 2) return uColor2;
+          if (idx == 3) return uColor3;
+          if (idx == 4) return uColor4;
+          if (idx == 5) return uColor5;
+          if (idx == 6) return uColor6;
+          return uColor7;
+        }
+
+        vec3 tanhv(vec3 x) {
+          vec3 e = exp(-2.0 * x);
+          return (1.0 - e) / (1.0 + e);
+        }
+
+        vec2 sceneC(vec2 frag, vec2 r) {
+          vec2 P = (frag + frag - r) / r.x;
+          float z = 0.0;
+          float d = 1e3;
+          vec4 O = vec4(0.0);
+          for (int k = 0; k < 39; k++) {
+            if (d <= 1e-4) break;
+            O = z * normalize(vec4(P, uZoom, 0.0)) - vec4(0.0, 4.0, 1.0, 0.0) / 4.5;
+            d = 1.0 - sqrt(length(O * O));
+            z += d;
+          }
+          return vec2(O.x, atan(O.z, O.y));
+        }
+
+        void mainImage(out vec4 o, vec2 C) {
+          vec2 r = iResolution.xy;
+          vec2 uv0 = (C + C - r) / r.x;
+          float T = 0.1 * iTime * uSpeed + 9.0;
+          float angRings = max(1.0, floor(6.28318530718 * max(uDensity, 0.05) + 0.5));
+          vec2 Y = vec2(5e-3, 6.28318530718 / angRings);
+          vec2 c0 = sceneC(C, r);
+          vec2 cdx = sceneC(C + vec2(1.0, 0.0), r);
+          vec2 cdy = sceneC(C + vec2(0.0, 1.0), r);
+          vec2 dCx = cdx - c0;
+          vec2 dCy = cdy - c0;
+          dCx.y -= 6.28318530718 * floor(dCx.y / 6.28318530718 + 0.5);
+          dCy.y -= 6.28318530718 * floor(dCy.y / 6.28318530718 + 0.5);
+          vec2 fw = abs(dCx) + abs(dCy);
+          C = c0;
+          vec2 P = vec2(2.0, 1.0) * uv0 - (r / r.x) * vec2(0.0, 1.0);
+          vec4 O = vec4(uBgColor * 90.0 * uBgGlow / (1e3 * dot(P, P) + 6.0), 0.0);
+          float mGlow = 0.0;
+          if (uMouseEnabled > 0.5) {
+            vec2 mN = (iMouse + iMouse - r) / r.x;
+            float md = length(uv0 - mN);
+            mGlow = exp(-md * md / max(uMouseRadius * uMouseRadius, 1e-4)) * uMouseStrength;
+            O.rgb += uMouseColor * mGlow * 0.25;
+          }
+          float zr = 5e-4 * uStreakWidth;
+          vec2 rr = vec2(max(length(fw), 1e-5));
+          float tail = 19.0 / max(uStreakLength, 0.05);
+          for (int m = 0; m < 16; m++) {
+            if (m >= uStreakCount) break;
+            float jf = float(m) + 1.0;
+            float ic = fract(sin(dot(vec2(jf, floor(C.x / Y.x + 0.5)), vec2(7.0, 11.0)) * 73.0));
+            vec2 Pp = C - (T + T * ic) * vec2(0.0, 1.0);
+            Pp -= floor(Pp / Y + 0.5) * Y;
+            float h = fract(8663.0 * ic);
+            vec3 col = palette(h);
+            float weight = mix(1.5, 1.0 + sin(T + 7.0 * h + 4.0), uTwinkle);
+            weight *= (1.0 + mGlow * 2.0);
+            vec2 inner = vec2(length(max(Pp, vec2(-1.0, 0.0))), length(Pp) - zr) - zr;
+            vec2 sm = vec2(1.0) - smoothstep(-rr, rr, inner);
+            O.rgb += dot(sm, vec2(exp(tail * Pp.y), 3.0)) * col * weight;
+            C.x += Y.x / 8.0;
+          }
+          vec3 colr = sqrt(tanhv(max(O.rgb * uGlow - vec3(0.04, 0.08, 0.02), 0.0)));
+          o = vec4(colr, uOpacity);
+        }
+
+        void main() {
+          vec4 color;
+          mainImage(color, vUv * iResolution.xy);
+          gl_FragColor = color;
+        }
+      `;
+
+      const canvas = document.createElement("canvas");
+      container.appendChild(canvas);
+      const gl = canvas.getContext("webgl", { alpha: true, antialias: true });
+      if (!gl) return;
+
+      const compile = (type, source) => {
+        const shader = gl.createShader(type);
+        gl.shaderSource(shader, source);
+        gl.compileShader(shader);
+        if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+          throw new Error(gl.getShaderInfoLog(shader) || "Shader compile failed");
+        }
+        return shader;
+      };
+
+      const program = gl.createProgram();
+      gl.attachShader(program, compile(gl.VERTEX_SHADER, vertex));
+      gl.attachShader(program, compile(gl.FRAGMENT_SHADER, fragment));
+      gl.linkProgram(program);
+      if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+        throw new Error(gl.getProgramInfoLog(program) || "Program link failed");
+      }
+      gl.useProgram(program);
+
+      const buffer = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+      const position = gl.getAttribLocation(program, "position");
+      gl.enableVertexAttribArray(position);
+      gl.vertexAttribPointer(position, 2, gl.FLOAT, false, 0, 0);
+
+      const uniform = name => gl.getUniformLocation(program, name);
+      const loc = {
+        iResolution: uniform("iResolution"),
+        iMouse: uniform("iMouse"),
+        iTime: uniform("iTime"),
+        uColorCount: uniform("uColorCount"),
+        uBgColor: uniform("uBgColor"),
+        uMouseColor: uniform("uMouseColor"),
+        uSpeed: uniform("uSpeed"),
+        uStreakCount: uniform("uStreakCount"),
+        uStreakWidth: uniform("uStreakWidth"),
+        uStreakLength: uniform("uStreakLength"),
+        uGlow: uniform("uGlow"),
+        uDensity: uniform("uDensity"),
+        uTwinkle: uniform("uTwinkle"),
+        uZoom: uniform("uZoom"),
+        uBgGlow: uniform("uBgGlow"),
+        uOpacity: uniform("uOpacity"),
+        uMouseEnabled: uniform("uMouseEnabled"),
+        uMouseStrength: uniform("uMouseStrength"),
+        uMouseRadius: uniform("uMouseRadius")
+      };
+
+      const prepared = prepColors(colors);
+      prepared.arr.forEach((color, index) => gl.uniform3fv(uniform("uColor" + index), color));
+      gl.uniform1i(loc.uColorCount, prepared.count);
+      gl.uniform3fv(loc.uBgColor, hexToRGB(backgroundColor));
+      gl.uniform3fv(loc.uMouseColor, prepared.avg);
+      gl.uniform1f(loc.uSpeed, speed);
+      gl.uniform1i(loc.uStreakCount, Math.max(1, Math.min(16, Math.round(streakCount))));
+      gl.uniform1f(loc.uStreakWidth, streakWidth);
+      gl.uniform1f(loc.uStreakLength, streakLength);
+      gl.uniform1f(loc.uGlow, glow);
+      gl.uniform1f(loc.uDensity, density);
+      gl.uniform1f(loc.uTwinkle, twinkle);
+      gl.uniform1f(loc.uZoom, zoom);
+      gl.uniform1f(loc.uBgGlow, backgroundGlow);
+      gl.uniform1f(loc.uOpacity, opacity);
+      gl.uniform1f(loc.uMouseEnabled, mouseInteraction ? 1 : 0);
+      gl.uniform1f(loc.uMouseStrength, mouseStrength);
+      gl.uniform1f(loc.uMouseRadius, mouseRadius);
+
+      let mouseTarget = [0, 0];
+      let mouse = [0, 0];
+      let lastTime = 0;
+
+      const resize = () => {
+        const dpr = Math.min(window.devicePixelRatio || 1, 1.75);
+        const rect = container.getBoundingClientRect();
+        const width = Math.max(1, Math.floor(rect.width * dpr));
+        const height = Math.max(1, Math.floor(rect.height * dpr));
+        if (canvas.width !== width || canvas.height !== height) {
+          canvas.width = width;
+          canvas.height = height;
+          gl.viewport(0, 0, width, height);
+          gl.uniform3f(loc.iResolution, width, height, 1);
+          mouseTarget = [width * 0.5, height * 0.5];
+          mouse = [width * 0.5, height * 0.5];
+        }
+      };
+
+      const onPointerMove = event => {
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        mouseTarget = [
+          (event.clientX - rect.left) * scaleX,
+          (rect.height - (event.clientY - rect.top)) * scaleY
+        ];
+      };
+
+      window.addEventListener("resize", resize);
+      canvas.addEventListener("pointermove", onPointerMove);
+      resize();
+
+      const render = time => {
+        const dt = lastTime ? (time - lastTime) / 1000 : 0;
+        lastTime = time;
+        const factor = mouseDampening > 0 ? Math.min(1, 1 - Math.exp(-dt / mouseDampening)) : 1;
+        mouse[0] += (mouseTarget[0] - mouse[0]) * factor;
+        mouse[1] += (mouseTarget[1] - mouse[1]) * factor;
+        gl.uniform1f(loc.iTime, time * 0.001);
+        gl.uniform2f(loc.iMouse, mouse[0], mouse[1]);
+        gl.drawArrays(gl.TRIANGLES, 0, 3);
+        requestAnimationFrame(render);
+      };
+      requestAnimationFrame(render);
+    })();
+  </script>
+
+</body>
+</html>

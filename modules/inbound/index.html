@@ -1,0 +1,983 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>仓库运营管理平台 - 入库管理</title>
+  <style>
+    :root {
+      --bg: #070b0d;
+      --paper: rgba(15, 20, 22, 0.82);
+      --paper-strong: rgba(24, 31, 34, 0.9);
+      --ink: #eef5f1;
+      --muted: #8a9a96;
+      --line: rgba(210, 235, 225, 0.12);
+      --accent: #6ee7d2;
+      --accent-strong: #c9fff4;
+      --accent-soft: rgba(73, 211, 190, 0.13);
+      --warn: #ffb19b;
+      --blue: #9cc7ff;
+      --gold: #e8c170;
+      --surface-module: rgba(12, 21, 23, 0.97);
+      --surface-module-strong: rgba(17, 29, 32, 0.98);
+      --surface-inner: rgba(255, 255, 255, 0.052);
+      --surface-inner-strong: rgba(255, 255, 255, 0.078);
+      --module-border: rgba(210, 235, 225, 0.24);
+      --module-border-soft: rgba(210, 235, 225, 0.14);
+      --module-shadow: 0 24px 70px rgba(0, 0, 0, 0.36);
+      --module-shadow-soft: 0 14px 38px rgba(0, 0, 0, 0.22);
+      --shadow: var(--module-shadow);
+      --radius: 18px;
+      --radius-inner: 14px;
+      --module-gap: 34px;
+      --module-padding: 28px;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      overflow-x: hidden;
+      color: var(--ink);
+      font: 15px/1.6 "IBM Plex Sans", "PingFang SC", "Microsoft YaHei", sans-serif;
+      background:
+        linear-gradient(rgba(169, 222, 211, 0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(169, 222, 211, 0.035) 1px, transparent 1px),
+        linear-gradient(180deg, #071012 0%, #0b1114 46%, #070b0d 100%);
+      background-size: 24px 24px, 24px 24px, auto;
+    }
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+    .page { width: 100%; max-width: 1320px; margin: 0 auto; padding: 28px 28px 72px; overflow-x: hidden; }
+    .platform-header, .hero, .panel, .metric, .brand-card, .drawer {
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,.010)),
+        var(--surface-module);
+      border: 1px solid var(--module-border);
+      border-radius: var(--radius);
+      box-shadow: var(--module-shadow);
+      backdrop-filter: blur(18px);
+    }
+    .platform-header {
+      min-height: 72px;
+      margin-bottom: 28px;
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      border-radius: 22px;
+      background:
+        linear-gradient(180deg, rgba(19, 30, 32, 0.95), rgba(9, 17, 19, 0.88)),
+        var(--surface-module);
+    }
+    .platform-identity { min-width: 0; display: flex; align-items: center; gap: 14px; }
+    .platform-mark {
+      width: 40px; height: 40px; border: 1px solid rgba(255,255,255,.72); border-radius: 8px;
+      display: block; object-fit: contain; flex: 0 0 auto; background: #fff;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.86), 0 12px 34px rgba(0,0,0,.22);
+    }
+    .platform-title { min-width: 0; display: grid; gap: 5px; }
+    .platform-title strong { color: var(--ink); font-size: 16px; line-height: 1.2; }
+    .platform-breadcrumb { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 13px; white-space: nowrap; }
+    .platform-breadcrumb span:last-child { color: var(--accent-strong); overflow: hidden; text-overflow: ellipsis; }
+    .platform-actions, .action-row, .filter-row, .segmented { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .module-state, .pill, .tag {
+      min-height: 32px; padding: 7px 11px; border-radius: 999px; display: inline-flex; align-items: center;
+      border: 1px solid rgba(110, 231, 210, 0.16); color: var(--accent-strong); background: rgba(110, 231, 210, 0.08);
+      font-size: 12px; font-weight: 800; white-space: nowrap;
+    }
+    .platform-link, .primary-button, .ghost-button, .icon-button {
+      min-height: 38px; padding: 9px 13px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center;
+      color: #061311; background: linear-gradient(135deg, var(--accent), #fff1cb); border: 1px solid rgba(255,241,203,.18);
+      box-shadow: 0 14px 34px rgba(110, 231, 210, 0.14); font-weight: 800; text-decoration: none; white-space: nowrap;
+    }
+    .ghost-button, .icon-button {
+      color: var(--ink); background: rgba(255,255,255,.04); border-color: var(--line); box-shadow: none;
+    }
+    .icon-button { width: 38px; padding: 0; }
+    .hero { min-width: 0; padding: 18px 22px; margin-bottom: 18px; display: grid; gap: 14px; overflow: hidden; }
+    .hero-head { display: none; }
+    .eyebrow, .panel-label { display: inline-flex; margin-bottom: 8px; color: var(--accent-strong); font-size: 12px; font-weight: 800; letter-spacing: 0; text-transform: uppercase; }
+    h1, h2, h3, p { margin: 0; }
+    h1 { font-size: clamp(28px, 3.4vw, 44px); line-height: 1.04; letter-spacing: 0; }
+    h2 { color: var(--ink); font-size: 21px; line-height: 1.22; letter-spacing: 0; }
+    h3 { color: var(--ink); font-size: 16px; line-height: 1.3; letter-spacing: 0; }
+    .hero-copy, .muted, .panel p { color: var(--muted); line-height: 1.62; }
+    .hero-copy { max-width: 920px; font-size: 14px; }
+    .import-status { display: grid; gap: 8px; min-width: 0; }
+    .import-status strong { color: var(--accent-strong); font-size: 13px; }
+    .status-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px 10px; color: var(--muted); font-size: 12px; }
+    .status-grid span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .date-tools, .filters {
+      padding: 16px;
+      border: 1px solid var(--module-border);
+      border-radius: var(--radius-inner);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.014)),
+        rgba(8, 14, 16, .94);
+      box-shadow: var(--module-shadow-soft);
+      display: grid;
+      gap: 14px;
+    }
+    .date-tools {
+      min-width: 0;
+      width: 100%;
+      align-items: center;
+      border-color: rgba(110, 231, 210, 0.20);
+      background:
+        linear-gradient(135deg, rgba(110, 231, 210, 0.06), rgba(156, 199, 255, 0.025)),
+        rgba(8, 14, 16, .94);
+    }
+    .filter-sidebar {
+      position: fixed;
+      top: 50%;
+      right: 18px;
+      z-index: 60;
+      width: 360px;
+      transform: translate(100%, -50%);
+      transition: transform 180ms ease;
+    }
+    .filter-sidebar.is-open, .filter-sidebar:hover { transform: translate(0, -50%); }
+    .filter-sidebar-toggle {
+      position: absolute;
+      top: 18px;
+      left: -52px;
+      width: 44px;
+      height: 40px;
+      border: 1px solid rgba(110, 231, 210, 0.22);
+      border-radius: 12px;
+      background: rgba(15, 20, 22, 0.92);
+      color: var(--accent-strong);
+      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.42);
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      font-size: 13px;
+      font-weight: 800;
+      line-height: 1;
+      transition: border-color 150ms ease, background 150ms ease, transform 150ms ease;
+    }
+    .filter-sidebar-toggle:hover {
+      border-color: rgba(255, 241, 203, 0.58);
+      background: rgba(23, 32, 34, 0.98);
+      transform: translateX(-2px);
+    }
+    .filter-sidebar .date-tools {
+      height: min(680px, calc(100vh - 48px));
+      overflow: hidden;
+      display: grid;
+      grid-template-rows: minmax(0, 1fr) auto auto auto;
+      align-items: stretch;
+      border-color: rgba(110, 231, 210, 0.22);
+      background:
+        linear-gradient(180deg, rgba(18, 28, 30, 0.98), rgba(8, 13, 15, 0.98)),
+        #0b1113;
+      box-shadow: 0 22px 70px rgba(0, 0, 0, 0.38);
+    }
+    .filter-sidebar .global-filter-grid {
+      grid-template-columns: 1fr;
+      grid-template-areas:
+        "date"
+        "brand"
+        "supplier"
+        "business"
+        "keyword";
+      overflow: auto;
+      align-content: start;
+      padding-right: 4px;
+    }
+    .filter-sidebar .brand-quick { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .filter-sidebar .filter-meta {
+      grid-template-columns: 1fr;
+      align-items: stretch;
+      gap: 8px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(210, 235, 225, 0.10);
+    }
+    .filter-sidebar .active-filters { max-height: 68px; flex-wrap: wrap; overflow-y: auto; }
+    .filter-sidebar .filter-result, .filter-sidebar .filter-notice { white-space: normal; }
+    .filter-sidebar .filter-actions { width: 100%; justify-content: stretch; }
+    .filter-sidebar .filter-actions .ghost-button, .filter-sidebar .filter-actions .primary-button { flex: 1 1 0; padding-inline: 8px; }
+    .global-filter-grid {
+      min-width: 0;
+      width: 100%;
+      display: grid;
+      grid-template-columns: minmax(130px, .62fr) minmax(240px, 1.18fr) minmax(130px, .62fr) minmax(150px, .72fr);
+      grid-template-areas:
+        "date brand brand brand"
+        "date supplier business keyword";
+      gap: 10px 12px;
+      align-items: end;
+    }
+    .filter-field { min-width: 0; display: grid; gap: 4px; }
+    .filter-field label { color: var(--muted); font-size: 11px; font-weight: 800; white-space: nowrap; }
+    .filter-field input, .filter-field select { width: 100%; min-width: 0; }
+    .brand-quick { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+    .brand-quick button {
+      min-height: 34px;
+      padding: 6px 8px;
+      border-radius: 999px;
+      color: var(--muted);
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.035);
+      font-weight: 800;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .brand-quick button.active { color: #061311; background: var(--accent); border-color: transparent; }
+    .filter-meta {
+      display: grid;
+      grid-template-columns: minmax(0, .9fr) minmax(0, 1.2fr) minmax(0, .45fr) 272px;
+      align-items: center;
+      gap: 10px;
+    }
+    .filter-meta > * { min-width: 0; }
+    .filter-result { min-width: 0; color: var(--accent-strong); font-size: 13px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .filter-notice { min-width: 0; color: var(--warn); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .active-filters { min-width: 0; max-height: 30px; display: flex; align-items: center; flex-wrap: nowrap; gap: 8px; overflow-x: auto; overflow-y: hidden; padding-bottom: 1px; }
+    .filter-chip {
+      min-height: 28px;
+      padding: 4px 8px 4px 10px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      flex: 0 0 auto;
+      color: var(--accent-strong);
+      background: rgba(110, 231, 210, 0.08);
+      border: 1px solid rgba(110, 231, 210, 0.16);
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+    .filter-chip button { border: 0; background: transparent; color: inherit; padding: 0 2px; font-weight: 900; line-height: 1; }
+    .global-filter-grid .filter-field:first-child { grid-area: date; }
+    .global-filter-grid .brand-field { grid-area: brand; }
+    .global-filter-grid .supplier-field { grid-area: supplier; }
+    .global-filter-grid .business-field { grid-area: business; }
+    .global-filter-grid .search-field { grid-area: keyword; }
+    .global-filter-grid .supplier-field { min-width: 0; }
+    .filter-actions { width: 272px; display: flex; justify-content: flex-end; gap: 8px; flex-wrap: nowrap; }
+    .filter-actions .ghost-button, .filter-actions .primary-button { min-height: 36px; padding: 8px 12px; }
+    .sidebar {
+      position: fixed;
+      top: 50%;
+      left: 18px;
+      z-index: 60;
+      width: 292px;
+      transform: translate(-100%, -50%);
+      transition: transform 180ms ease;
+    }
+    .sidebar.is-open, .sidebar:hover { transform: translate(0, -50%); }
+    .sidebar-toggle {
+      position: absolute;
+      top: 18px;
+      right: -52px;
+      width: 44px;
+      height: 40px;
+      border: 1px solid rgba(110, 231, 210, 0.22);
+      border-radius: 12px;
+      background: rgba(15, 20, 22, 0.92);
+      color: var(--accent-strong);
+      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.42);
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      font-size: 13px;
+      font-weight: 800;
+      line-height: 1;
+      transition: border-color 150ms ease, background 150ms ease, transform 150ms ease;
+    }
+    .sidebar-toggle:hover {
+      border-color: rgba(255, 241, 203, 0.58);
+      background: rgba(23, 32, 34, 0.98);
+      transform: translateX(2px);
+    }
+    .date-panel { padding: 14px; }
+    .calendar-shell { display: grid; gap: 8px; }
+    .calendar-monthbar {
+      display: grid;
+      gap: 7px;
+      padding-bottom: 7px;
+      border-bottom: 1px solid var(--line);
+    }
+    .calendar-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-width: 0; }
+    .calendar-title { color: var(--ink); font-size: 16px; font-weight: 800; white-space: nowrap; word-break: keep-all; flex: 0 0 auto; }
+    .calendar-summary { color: var(--muted); font-size: 12px; white-space: nowrap; }
+    .calendar-controls { display: grid; grid-template-columns: repeat(4, 1fr); align-items: center; gap: 6px; }
+    .calendar-nav {
+      width: 100%;
+      height: 28px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      color: var(--accent-strong);
+      background: rgba(255,255,255,0.04);
+      cursor: pointer;
+      font: inherit;
+      font-size: 13px;
+      line-height: 1;
+    }
+    .calendar-nav:hover { border-color: rgba(110, 231, 210, 0.36); background: rgba(110, 231, 210, 0.10); }
+    .calendar-weekdays, .calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+    .calendar-weekdays span { text-align: center; color: var(--muted); font-size: 11px; font-weight: 800; }
+    .calendar-day {
+      aspect-ratio: 1;
+      min-width: 0;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      position: relative;
+      color: rgba(238, 245, 241, 0.36);
+      background: transparent;
+      font: inherit;
+      font-size: 12px;
+      font-weight: 760;
+      cursor: default;
+    }
+    .calendar-day.has-data {
+      color: var(--ink);
+      cursor: pointer;
+      background: rgba(255,255,255,0.045);
+      border-color: rgba(210, 235, 225, 0.10);
+    }
+    .calendar-day.has-data:hover { border-color: rgba(110, 231, 210, 0.38); background: rgba(110, 231, 210, 0.10); }
+    .calendar-day.active {
+      color: #061311;
+      background: linear-gradient(135deg, var(--accent), #fff1cb);
+      border-color: rgba(255, 241, 203, 0.40);
+      box-shadow: 0 10px 28px rgba(110, 231, 210, 0.16);
+    }
+    .calendar-day.has-data::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      bottom: 5px;
+      width: 4px;
+      height: 4px;
+      border-radius: 999px;
+      background: var(--accent);
+      transform: translateX(-50%);
+    }
+    .calendar-day.active::after { background: rgba(6, 19, 17, 0.76); }
+    .calendar-detail {
+      min-height: 30px;
+      padding-top: 7px;
+      border-top: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .calendar-meta { color: var(--muted); font-size: 12px; white-space: nowrap; }
+    .calendar-badge {
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent-strong);
+      font-size: 11px;
+      white-space: nowrap;
+    }
+    select, input {
+      min-height: 38px; border-radius: 10px; border: 1px solid var(--line); color: var(--ink);
+      background: rgba(4,8,10,.74); padding: 8px 10px; outline: none;
+    }
+    input::placeholder { color: rgba(238,245,241,.42); }
+    .segmented button {
+      min-height: 34px; padding: 7px 10px; border-radius: 10px; color: var(--muted); border: 1px solid var(--line);
+      background: rgba(255,255,255,.035); font-weight: 800;
+    }
+    .segmented button.active { color: #061311; background: var(--accent); border-color: transparent; }
+    main { min-width: 0; display: grid; gap: var(--module-gap); }
+    main > * { min-width: 0; }
+    .panel {
+      position: relative;
+      min-width: 0;
+      padding: var(--module-padding);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.055), rgba(255,255,255,.014)),
+        var(--surface-module);
+      border-color: var(--module-border);
+      box-shadow: var(--module-shadow);
+      overflow: hidden;
+      isolation: isolate;
+    }
+    .panel::before {
+      content: "";
+      position: absolute;
+      inset: 0 24px auto;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(110,231,210,.48), rgba(156,199,255,.26), transparent);
+      opacity: .72;
+      pointer-events: none;
+    }
+    .panel::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.026);
+      pointer-events: none;
+      z-index: -1;
+    }
+    .panel-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 20px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid rgba(210,235,225,.18);
+    }
+    .panel-head > div { min-width: 0; display: grid; gap: 4px; }
+    .panel-head .panel-label { margin-bottom: 0; }
+    .brand-panel {
+      background:
+        linear-gradient(180deg, rgba(18, 32, 34, 0.98), rgba(9, 15, 17, 0.97)),
+        var(--surface-module);
+      border-color: rgba(110, 231, 210, 0.26);
+      box-shadow: var(--module-shadow);
+    }
+    .brand-overview { display: grid; grid-template-columns: minmax(320px, 420px) minmax(0, 1fr); gap: 24px; align-items: stretch; min-height: 390px; }
+    .donut-card {
+      min-height: 390px;
+      padding: 20px;
+      border: 1px solid var(--module-border-soft);
+      border-radius: var(--radius-inner);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.065), rgba(255,255,255,.020)),
+        var(--surface-inner);
+      display: grid;
+      gap: 12px;
+      align-content: center;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.055), var(--module-shadow-soft);
+    }
+    .donut-chart { min-height: 330px; display: grid; grid-template-rows: minmax(210px, auto) 1fr; justify-items: center; align-items: center; gap: 12px; }
+    .donut-chart.no-legend { min-height: 230px; grid-template-rows: 1fr; }
+    .donut-chart svg { width: min(100%, 210px); aspect-ratio: 1; display: block; }
+    .donut-center { fill: var(--ink); font-size: 18px; font-weight: 800; text-anchor: middle; }
+    .donut-sub { fill: var(--muted); font-size: 10px; text-anchor: middle; }
+    .donut-legend { width: 100%; display: grid; gap: 9px; min-width: 0; }
+    .legend-row { display: grid; grid-template-columns: 10px minmax(58px, 1fr) auto; align-items: center; gap: 8px; color: var(--muted); font-size: 12px; }
+    .legend-row.is-empty { opacity: .42; }
+    .legend-row span:nth-child(2) { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .legend-dot { width: 10px; height: 10px; border-radius: 999px; }
+    .legend-row strong { color: var(--ink); font-size: 13px; white-space: nowrap; }
+    .brand-grid { min-height: 390px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+    .brand-card {
+      --brand-color: var(--accent);
+      position: relative;
+      min-width: 0;
+      min-height: 0;
+      padding: 24px 24px 22px;
+      border-radius: 16px;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 22% 0%, color-mix(in srgb, var(--brand-color) 10%, transparent), transparent 42%),
+        linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.018)),
+        rgba(8, 14, 16, .94);
+      border-color: color-mix(in srgb, var(--brand-color) 28%, rgba(210,235,225,.18));
+      text-align: left;
+      display: grid;
+      align-content: center;
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.05),
+        inset 0 0 0 1px color-mix(in srgb, var(--brand-color) 7%, transparent),
+        0 18px 46px rgba(0,0,0,.24);
+      transition: border-color 160ms ease, transform 160ms ease, opacity 160ms ease, box-shadow 160ms ease;
+    }
+    .brand-card::before {
+      content: "";
+      position: absolute;
+      inset: 0 18px auto;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--brand-color), transparent);
+      opacity: .58;
+    }
+    .brand-card::after {
+      content: "";
+      position: absolute;
+      inset: 14px auto 14px 0;
+      width: 1px;
+      border-radius: 999px;
+      background: var(--brand-color);
+      opacity: .22;
+    }
+    .brand-card.is-empty { opacity: .48; }
+    .brand-card:hover, .brand-card.active {
+      transform: translateY(-2px);
+      border-color: color-mix(in srgb, var(--brand-color) 38%, rgba(255,255,255,.16));
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.06),
+        inset 0 0 0 1px color-mix(in srgb, var(--brand-color) 11%, transparent),
+        0 20px 54px rgba(0,0,0,.24);
+    }
+    .brand-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .brand-top h3 { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .brand-dot { width: 10px; height: 10px; border-radius: 999px; display: inline-flex; margin-right: 8px; }
+    .brand-metrics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 14px; margin-top: 18px; }
+    .brand-metrics span { display: block; color: var(--muted); font-size: 12px; white-space: nowrap; }
+    .brand-metrics strong { display: block; margin-top: 4px; color: var(--ink); font-size: 23px; line-height: 1.05; white-space: nowrap; }
+    .two-col { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(380px, .85fr); gap: 26px; align-items: stretch; }
+    .three-col { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 26px; align-items: stretch; }
+    .chart {
+      min-height: 260px;
+      padding: 18px;
+      border: 1px solid rgba(210,235,225,.18);
+      border-radius: var(--radius-inner);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.060), rgba(255,255,255,.018)),
+        rgba(5, 10, 12, .62);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.05), 0 10px 28px rgba(0,0,0,.16);
+    }
+    .weekly-chart {
+      min-height: 340px;
+    }
+    .weekly-chart svg {
+      width: 100%;
+      height: 300px;
+      display: block;
+    }
+    .weekly-legend {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px 18px;
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .weekly-legend span {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      white-space: nowrap;
+    }
+    .legend-line {
+      width: 22px;
+      height: 2px;
+      border-radius: 999px;
+      background: var(--warn);
+    }
+    .business-visual { display: grid; grid-template-columns: minmax(280px, .78fr) minmax(0, 1fr); gap: 20px; align-items: center; }
+    .business-visual .donut-card { min-height: 260px; }
+    .business-visual .bars { min-width: 0; padding: 14px; }
+    .business-visual .bar-row {
+      grid-template-columns: minmax(0, 1fr) auto;
+      grid-template-areas:
+        "label value"
+        "track track";
+      gap: 7px 8px;
+    }
+    .business-visual .bar-row > span { grid-area: label; }
+    .business-visual .bar-row .bar-track { grid-area: track; width: 100%; }
+    .business-visual .bar-row strong { grid-area: value; }
+    .business-visual .bar-row strong { font-size: 17px; }
+    .business-visual .bar-row strong small { font-size: 11px; }
+    .bars {
+      display: grid;
+      gap: 12px;
+      padding: 18px;
+      border: 1px solid rgba(210,235,225,.18);
+      border-radius: var(--radius-inner);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.060), rgba(255,255,255,.018)),
+        rgba(5, 10, 12, .62);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.05), 0 10px 28px rgba(0,0,0,.16);
+    }
+    .bar-row { display: grid; grid-template-columns: minmax(64px, 96px) minmax(0, 1fr) minmax(112px, auto); align-items: center; gap: 10px; color: var(--muted); font-size: 13px; }
+    .bar-row { min-width: 0; }
+    .bar-row > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .bar-row strong { min-width: 0; color: var(--ink); text-align: right; white-space: nowrap; font-size: 18px; line-height: 1.1; }
+    .bar-row strong small { color: var(--muted); font-size: 12px; font-weight: 800; }
+    .bar-track { height: 12px; border-radius: 999px; overflow: hidden; background: rgba(255,255,255,.055); }
+    .bar-fill { height: 100%; border-radius: inherit; background: var(--accent); }
+    .matrix {
+      overflow: auto;
+      border: 1px solid rgba(210,235,225,.18);
+      border-radius: var(--radius-inner);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.060), rgba(255,255,255,.018)),
+        rgba(5, 10, 12, .62);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.05), var(--module-shadow-soft);
+    }
+    .matrix table { min-width: 520px; }
+    .matrix, .table-wrap, .active-filters, .filter-sidebar form, .drawer {
+      scrollbar-width: thin;
+      scrollbar-color: rgba(138, 168, 178, .56) transparent;
+    }
+    .matrix::-webkit-scrollbar, .table-wrap::-webkit-scrollbar, .active-filters::-webkit-scrollbar, .filter-sidebar form::-webkit-scrollbar, .drawer::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    .matrix::-webkit-scrollbar-track, .table-wrap::-webkit-scrollbar-track, .active-filters::-webkit-scrollbar-track, .filter-sidebar form::-webkit-scrollbar-track, .drawer::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .matrix::-webkit-scrollbar-thumb, .table-wrap::-webkit-scrollbar-thumb, .active-filters::-webkit-scrollbar-thumb, .filter-sidebar form::-webkit-scrollbar-thumb, .drawer::-webkit-scrollbar-thumb {
+      border: 2px solid transparent;
+      border-radius: 999px;
+      background: rgba(138, 168, 178, .50);
+      background-clip: padding-box;
+    }
+    .matrix::-webkit-scrollbar-thumb:hover, .table-wrap::-webkit-scrollbar-thumb:hover, .active-filters::-webkit-scrollbar-thumb:hover, .filter-sidebar form::-webkit-scrollbar-thumb:hover, .drawer::-webkit-scrollbar-thumb:hover {
+      background: rgba(141, 236, 220, .62);
+      background-clip: padding-box;
+    }
+    .matrix::-webkit-scrollbar-corner, .table-wrap::-webkit-scrollbar-corner, .active-filters::-webkit-scrollbar-corner, .filter-sidebar form::-webkit-scrollbar-corner, .drawer::-webkit-scrollbar-corner {
+      background: transparent;
+    }
+    .table-wrap {
+      overflow: auto;
+      border: 1px solid rgba(210,235,225,.22);
+      border-radius: var(--radius-inner);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.052), rgba(255,255,255,.016)),
+        rgba(7, 12, 14, .92);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.05), var(--module-shadow-soft);
+    }
+    table { width: 100%; border-collapse: separate; border-spacing: 0; min-width: 900px; }
+    th, td { padding: 12px 14px; border-bottom: 1px solid var(--module-border-soft); color: var(--muted); text-align: left; font-size: 13px; white-space: nowrap; }
+    th { color: var(--accent-strong); background: rgba(25, 40, 43, .98); font-weight: 800; position: sticky; top: 0; z-index: 1; box-shadow: inset 0 -1px 0 rgba(210,235,225,.16); }
+    tbody tr:nth-child(odd) td { background: rgba(255,255,255,.018); }
+    tbody tr:nth-child(even) td { background: rgba(255,255,255,.038); }
+    tbody tr:hover td { background: rgba(110,231,210,.055); color: rgba(238,245,241,.88); }
+    td:first-child, th:first-child { position: sticky; left: 0; background: rgba(12,18,20,.98); z-index: 2; }
+    tbody tr:nth-child(odd) td:first-child { background: rgba(14, 22, 24, .98); }
+    tbody tr:nth-child(even) td:first-child { background: rgba(18, 28, 30, .98); }
+    tbody tr:hover td:first-child { background: rgba(20, 38, 39, .98); }
+    tbody tr:last-child td { border-bottom: 0; }
+    .link-cell { color: var(--accent-strong); background: none; border: 0; padding: 0; font-weight: 800; }
+    .empty-row td { height: 92px; text-align: center; color: var(--muted); }
+    .pager { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--module-border-soft); color: var(--muted); font-size: 13px; }
+    #qualitySummary {
+      padding: 8px 14px;
+      border: 1px solid rgba(210,235,225,.18);
+      border-radius: var(--radius-inner);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.060), rgba(255,255,255,.018)),
+        rgba(5, 10, 12, .62);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.05);
+    }
+    .quality-line { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 10px; padding: 11px 0; border-bottom: 1px solid var(--module-border-soft); color: var(--muted); }
+    .quality-line:last-child { border-bottom: 0; }
+    .drawer-backdrop { position: fixed; inset: 0; display: none; background: rgba(0,0,0,.44); z-index: 20; }
+    .drawer-backdrop.open { display: block; }
+    .drawer { position: fixed; top: 0; right: 0; width: min(620px, 100%); height: 100vh; padding: 22px; border-radius: 0; overflow: auto; z-index: 21; transform: translateX(100%); transition: transform 180ms ease; }
+    .drawer.open { transform: translateX(0); }
+    .drawer-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 18px; }
+    .drawer-list { display: grid; gap: 10px; }
+    .drawer-item { padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: rgba(255,255,255,.035); color: var(--muted); }
+    .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+    @media (max-width: 1180px) {
+      main { gap: 30px; }
+      .two-col, .three-col, .brand-overview, .business-visual { grid-template-columns: 1fr; }
+      .global-filter-grid {
+        grid-template-columns: 180px minmax(220px, 1fr) minmax(150px, .7fr) minmax(150px, .75fr);
+        grid-template-areas:
+          "date brand brand brand"
+          "date supplier business keyword";
+      }
+      .import-status { min-width: 0; }
+    }
+    @media (min-width: 1181px) and (max-width: 1360px) {
+      .global-filter-grid {
+        grid-template-columns: minmax(160px, .75fr) minmax(320px, 1.45fr) minmax(170px, .75fr) minmax(170px, .75fr);
+        grid-template-areas:
+          "date brand brand brand"
+          "supplier business keyword keyword";
+      }
+    }
+    @media (max-width: 760px) {
+      :root { --module-padding: 18px; --module-gap: 24px; }
+      .page { padding: 16px; }
+      .platform-header { align-items: flex-start; flex-direction: column; }
+      .platform-actions { align-items: center; flex-direction: row; flex-wrap: wrap; }
+      .platform-link, .primary-button, .ghost-button { width: auto; }
+      .action-row .primary-button, .action-row .ghost-button { flex: 1 1 130px; }
+      .hero, .panel { padding: 16px; }
+      .hero-head { display: none; }
+      .hero-copy { display: none; }
+      h1 { font-size: 30px; }
+      .brand-grid { grid-template-columns: 1fr; }
+      .donut-chart { grid-template-columns: 1fr; }
+      .brand-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .status-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .date-tools { padding: 10px; gap: 8px; }
+      .global-filter-grid {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        grid-template-areas:
+          "date date"
+          "brand brand"
+          "supplier business"
+          "keyword keyword";
+        gap: 8px;
+      }
+      .filter-field { gap: 0; }
+      .filter-field label { display: none; }
+      .filter-field input, .filter-field select { min-height: 34px; }
+      .brand-quick { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+      .brand-quick button { font-size: 12px; }
+      .filter-actions { justify-content: flex-start; gap: 6px; }
+      .filter-actions .ghost-button, .filter-actions .primary-button { min-height: 34px; padding: 7px 10px; }
+      .filter-meta { grid-template-columns: 1fr; align-items: flex-start; gap: 6px; }
+      .active-filters { width: 100%; }
+      .filter-result { font-size: 12px; }
+      .filter-chip { min-height: 24px; padding-top: 3px; padding-bottom: 3px; }
+      .sidebar {
+        top: 96px;
+        left: 12px;
+        right: auto;
+        bottom: auto;
+        width: min(292px, calc(100vw - 72px));
+        transform: translateY(calc(100% - 54px));
+      }
+      .sidebar.is-open, .sidebar:hover { transform: translateY(0); }
+      .sidebar-toggle { top: -52px; right: 10px; width: 58px; }
+      .filter-sidebar {
+        top: 84px;
+        right: 12px;
+        bottom: 12px;
+        width: min(360px, calc(100vw - 72px));
+        transform: translateY(calc(100% - 54px));
+      }
+      .filter-sidebar.is-open, .filter-sidebar:hover { transform: translateY(0); }
+      .filter-sidebar-toggle { top: -52px; left: auto; right: 10px; width: 58px; }
+      .filter-sidebar .date-tools { height: 100%; max-height: none; }
+    }
+    @media (max-width: 480px) {
+      .global-filter-grid {
+        grid-template-columns: 1fr;
+        grid-template-areas:
+          "date"
+          "brand"
+          "supplier"
+          "business"
+          "keyword"
+          "start"
+          "end"
+      }
+      .brand-quick { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="platform-header">
+      <div class="platform-identity">
+        <img class="platform-mark" src="../../assets/jingtang-warehouse-logo-clear.png" alt="井唐仓储" />
+        <div class="platform-title">
+          <strong>仓库运营管理平台</strong>
+          <div class="platform-breadcrumb"><span>首页</span><span>/</span><span>入库管理</span></div>
+        </div>
+      </div>
+      <div class="platform-actions">
+        <a class="platform-link" href="../../index.html">返回主页</a>
+      </div>
+    </header>
+
+    <aside class="sidebar" id="dateSidebar">
+      <button id="datePanelToggle" class="sidebar-toggle" type="button" aria-label="打开日期切换" aria-expanded="false">日期</button>
+      <section class="panel date-panel">
+        <div id="dateList"></div>
+      </section>
+    </aside>
+
+    <aside class="filter-sidebar" id="filterSidebar">
+      <button id="filterPanelToggle" class="filter-sidebar-toggle" type="button" aria-label="打开全局筛选" aria-expanded="false">筛选</button>
+      <div class="date-tools">
+        <div class="global-filter-grid">
+          <div class="filter-field">
+            <label for="dateSelect">日期</label>
+            <select id="dateSelect"></select>
+          </div>
+          <div class="filter-field brand-field">
+            <label>品牌</label>
+            <div class="brand-quick" id="brandQuick"></div>
+          </div>
+          <div class="filter-field supplier-field">
+            <label for="supplierSearch">供应商</label>
+            <input id="supplierSearch" type="search" list="supplierOptions" placeholder="搜索供应商" />
+            <datalist id="supplierOptions"></datalist>
+          </div>
+          <div class="filter-field business-field">
+            <label for="businessFilter">业务类型</label>
+            <select id="businessFilter"><option value="">全部业务类型</option></select>
+          </div>
+          <div class="filter-field search-field">
+            <label for="keyword">入库单号 / 款号</label>
+            <input id="keyword" type="search" placeholder="搜索入库单号或款号" />
+          </div>
+        </div>
+        <div class="filter-meta">
+          <div class="active-filters" id="activeFilters"></div>
+          <div class="filter-result" id="filterResult"></div>
+          <div class="filter-notice" id="filterNotice"></div>
+          <div class="filter-actions">
+            <button class="ghost-button" type="button" id="clearFilters">重置筛选</button>
+            <button class="ghost-button" type="button" id="importButton">导入数据</button>
+            <button class="primary-button" type="button" id="exportButton">导出结果</button>
+          </div>
+        </div>
+        <input id="startDate" class="visually-hidden" type="date" />
+        <input id="endDate" class="visually-hidden" type="date" />
+        <div class="segmented visually-hidden" id="rangeButtons" aria-label="日期范围">
+          <button type="button" data-range="today">今天</button>
+          <button type="button" data-range="yesterday">昨天</button>
+          <button type="button" data-range="7d">最近7天</button>
+          <button type="button" data-range="month">本月</button>
+          <button type="button" data-range="custom">自定义</button>
+        </div>
+      </div>
+    </aside>
+
+    <main>
+      <section class="panel brand-panel">
+        <div class="panel-head">
+          <div><span class="panel-label">Brand</span><h2>品牌数据总览</h2></div>
+          <button class="ghost-button" type="button" id="allBrands">查看全部</button>
+        </div>
+        <div class="brand-overview">
+          <div class="donut-card" id="brandDonut"></div>
+          <div class="brand-grid" id="brandCards"></div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <div><span class="panel-label">Last 7 Days</span><h2>近7日入库趋势</h2></div>
+        </div>
+        <div class="chart weekly-chart" id="weeklyTrend"></div>
+      </section>
+
+      <section class="two-col">
+        <section class="panel">
+          <div class="panel-head">
+            <div><span class="panel-label">Trend</span><h2>分时入库趋势</h2></div>
+            <select id="trendMetric">
+              <option value="quantity">入库数量</option>
+              <option value="orders">入库单数</option>
+              <option value="styles">款数</option>
+            </select>
+          </div>
+          <div class="chart" id="hourlyTrend"></div>
+        </section>
+        <section class="panel">
+          <div class="panel-head">
+            <div><span class="panel-label">Business</span><h2>业务类型分布</h2></div>
+          </div>
+          <div class="business-visual">
+            <div class="donut-card" id="businessDonut"></div>
+            <div class="bars" id="businessBars"></div>
+          </div>
+          <p class="muted" id="businessHint"></p>
+        </section>
+      </section>
+
+      <section class="three-col">
+        <section class="panel">
+          <div class="panel-head">
+            <div><span class="panel-label">Compare</span><h2>品牌入库对比</h2></div>
+            <select id="brandCompareMetric">
+              <option value="quantity">入库数量</option>
+              <option value="orders">入库单数</option>
+              <option value="styles">款数</option>
+              <option value="suppliers">供应商数</option>
+            </select>
+          </div>
+          <div class="bars" id="brandCompare"></div>
+        </section>
+        <section class="panel">
+          <div class="panel-head">
+            <div><span class="panel-label">Matrix</span><h2>品牌与业务类型</h2></div>
+          </div>
+          <div class="matrix" id="brandBusinessMatrix"></div>
+        </section>
+        <section class="panel">
+          <div class="panel-head">
+            <div><span class="panel-label">Quality</span><h2>数据质量</h2></div>
+            <button class="ghost-button" type="button" id="qualityButton">查看明细</button>
+          </div>
+          <div id="qualitySummary"></div>
+        </section>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <div><span class="panel-label">Supplier</span><h2>供应商入库排行</h2></div>
+          <select id="supplierSort">
+            <option value="quantity">按入库数量</option>
+            <option value="orders">按入库单数</option>
+            <option value="styles">按款数</option>
+          </select>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>排名</th><th>供应商</th><th>品牌</th><th>入库数量</th><th>入库单数</th><th>款数</th><th>占比</th></tr></thead>
+            <tbody id="supplierBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <div><span class="panel-label">Details</span><h2>入库明细</h2></div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th><button class="link-cell" type="button" data-sort="warehouseTime">入仓时间</button></th>
+                <th><button class="link-cell" type="button" data-sort="date">日期</button></th>
+                <th>品牌</th><th>供应商</th><th>业务类型</th>
+                <th><button class="link-cell" type="button" data-sort="inboundOrderNo">入库单号</button></th>
+                <th><button class="link-cell" type="button" data-sort="styleNo">款号</button></th>
+                <th><button class="link-cell" type="button" data-sort="quantity">数量</button></th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="detailBody"></tbody>
+          </table>
+        </div>
+        <div class="pager">
+          <span id="pagerInfo"></span>
+          <div class="action-row">
+            <button class="ghost-button" type="button" id="prevPage">上一页</button>
+            <button class="ghost-button" type="button" id="nextPage">下一页</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <div><span class="panel-label">Import</span><h2>最近导入状态</h2></div>
+        </div>
+        <aside class="import-status">
+          <div class="status-grid" id="importStatus"></div>
+        </aside>
+      </section>
+    </main>
+  </div>
+
+  <div class="drawer-backdrop" id="drawerBackdrop"></div>
+  <aside class="drawer" id="orderDrawer" aria-hidden="true">
+    <div class="drawer-head">
+      <div><span class="panel-label">Order</span><h2 id="drawerTitle">入库单详情</h2></div>
+      <button class="icon-button" type="button" data-close-drawer>×</button>
+    </div>
+    <div id="drawerContent"></div>
+  </aside>
+  <aside class="drawer" id="qualityDrawer" aria-hidden="true">
+    <div class="drawer-head">
+      <div><span class="panel-label">Quality</span><h2>数据质量明细</h2></div>
+      <button class="icon-button" type="button" data-close-drawer>×</button>
+    </div>
+    <div id="qualityContent"></div>
+  </aside>
+  <script src="../../assets/inbound-data.js"></script>
+  <script src="../../assets/inbound-dashboard.js"></script>
+</body>
+</html>

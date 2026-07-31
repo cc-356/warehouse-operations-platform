@@ -1,0 +1,390 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>仓库运营管理平台 - 成本管理</title>
+  <style>
+
+    :root {
+      --bg: #070b0d;
+      --paper: rgba(15, 20, 22, 0.82);
+      --paper-strong: rgba(24, 31, 34, 0.86);
+      --ink: #eef5f1;
+      --muted: #8a9a96;
+      --line: rgba(210, 235, 225, 0.12);
+      --accent: #6ee7d2;
+      --accent-strong: #c9fff4;
+      --accent-soft: rgba(73, 211, 190, 0.13);
+      --warn: #ffb19b;
+      --gold-soft: rgba(232, 193, 112, 0.12);
+      --shadow: 0 26px 90px rgba(0, 0, 0, 0.42);
+      --radius: 26px;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      font: 15px/1.6 "IBM Plex Sans", "PingFang SC", "Microsoft YaHei", sans-serif;
+      background:
+        linear-gradient(rgba(169, 222, 211, 0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(169, 222, 211, 0.035) 1px, transparent 1px),
+        radial-gradient(circle at 8% 0%, rgba(74, 211, 190, 0.16), transparent 25%),
+        radial-gradient(circle at 100% 10%, rgba(232, 193, 112, 0.10), transparent 21%),
+        linear-gradient(180deg, #071012 0%, #0b1114 46%, #070b0d 100%);
+      background-size: 24px 24px, 24px 24px, auto, auto, auto;
+    }
+    .page {
+      max-width: 1700px;
+      margin: 0 auto;
+      padding: 24px 24px 64px;
+    }
+    .platform-header, .hero, .panel, .metric, .empty-card {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+    }
+    .platform-header {
+      min-height: 72px;
+      margin-bottom: 20px;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      border-radius: 22px;
+      background: linear-gradient(180deg, rgba(15, 25, 27, 0.92), rgba(9, 17, 19, 0.86));
+    }
+    .platform-identity {
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .platform-mark {
+      width: 40px;
+      height: 40px;
+      border: 1px solid rgba(255, 255, 255, 0.72);
+      border-radius: 8px;
+      display: block;
+      object-fit: contain;
+      flex: 0 0 auto;
+      background: #fff;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.86), 0 12px 34px rgba(0,0,0,.22);
+    }
+    .platform-title {
+      min-width: 0;
+      display: grid;
+      gap: 5px;
+    }
+    .platform-title strong {
+      color: var(--ink);
+      font-size: 16px;
+      line-height: 1.2;
+    }
+    .platform-breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+      color: var(--muted);
+      font-size: 13px;
+      white-space: nowrap;
+    }
+    .platform-breadcrumb span:last-child {
+      min-width: 0;
+      overflow: hidden;
+      color: var(--accent-strong);
+      text-overflow: ellipsis;
+    }
+    .platform-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 0 0 auto;
+    }
+    .module-state {
+      min-height: 36px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      border: 1px solid rgba(110, 231, 210, 0.16);
+      color: var(--accent-strong);
+      background: rgba(110, 231, 210, 0.08);
+      font-size: 13px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .platform-link {
+      min-height: 38px;
+      padding: 9px 13px;
+      border-radius: 12px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #061311;
+      background: linear-gradient(135deg, var(--accent), #fff1cb);
+      border: 1px solid rgba(255, 241, 203, 0.18);
+      box-shadow: 0 14px 34px rgba(110, 231, 210, 0.14);
+      font: inherit;
+      font-weight: 800;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .hero {
+      padding: 34px 36px;
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+    .topbar {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 24px;
+    }
+    .eyebrow, .panel-label {
+      display: inline-flex;
+      margin-bottom: 9px;
+      color: var(--accent-strong);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+    h1, h2, h3, p { margin: 0; }
+    h1 {
+      max-width: 900px;
+      font-size: clamp(34px, 5vw, 68px);
+      line-height: 0.98;
+      letter-spacing: 0;
+    }
+    h2 {
+      color: var(--ink);
+      font-size: 22px;
+      line-height: 1.22;
+      letter-spacing: 0;
+    }
+    h3 {
+      color: var(--ink);
+      font-size: 17px;
+      line-height: 1.3;
+      letter-spacing: 0;
+    }
+    .hero-copy, .panel p, .empty-note {
+      max-width: 760px;
+      color: var(--muted);
+      line-height: 1.72;
+    }
+    .status-pill {
+      padding: 8px 12px;
+      border: 1px solid rgba(255, 177, 155, 0.22);
+      border-radius: 999px;
+      color: var(--warn);
+      background: rgba(255, 177, 155, 0.08);
+      font-size: 13px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .metric {
+      min-height: 116px;
+      padding: 18px;
+      border-radius: 18px;
+      background: rgba(255,255,255,0.035);
+    }
+    .metric span {
+      display: block;
+      color: var(--muted);
+      font-size: 13px;
+      white-space: nowrap;
+    }
+    .metric strong {
+      display: block;
+      margin-top: 14px;
+      color: var(--ink);
+      font-size: 30px;
+      line-height: 1;
+      letter-spacing: 0;
+    }
+    main {
+      display: grid;
+      gap: 20px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 20px;
+    }
+    .panel {
+      padding: 24px;
+    }
+    .panel-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+    .empty-card {
+      min-height: 168px;
+      padding: 20px;
+      display: grid;
+      align-content: center;
+      gap: 10px;
+      border-radius: 18px;
+      background: rgba(255,255,255,0.035);
+    }
+    .empty-card strong {
+      font-size: 18px;
+      color: var(--ink);
+    }
+    .table-wrap {
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 720px;
+    }
+    th, td {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+      color: var(--muted);
+      text-align: left;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+    th {
+      color: var(--accent-strong);
+      background: rgba(255,255,255,0.035);
+      font-weight: 800;
+    }
+    tbody tr:last-child td {
+      border-bottom: 0;
+    }
+    .empty-row td {
+      height: 88px;
+      color: var(--muted);
+      text-align: center;
+    }
+    @media (max-width: 1180px) {
+      .metric-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    @media (max-width: 760px) {
+      .page {
+        padding: 16px;
+      }
+      .platform-header, .topbar {
+        align-items: stretch;
+        flex-direction: column;
+      }
+      .platform-actions {
+        align-items: stretch;
+        flex-direction: column;
+      }
+      .platform-link {
+        width: 100%;
+      }
+      .hero, .panel {
+        padding: 20px;
+      }
+      .metric-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="platform-header">
+      <div class="platform-identity">
+        <img class="platform-mark" src="../../assets/jingtang-warehouse-logo-clear.png" alt="井唐仓储" />
+        <div class="platform-title">
+          <strong>仓库运营管理平台</strong>
+          <div class="platform-breadcrumb">
+            <span>运营驾驶舱</span>
+            <span>/</span>
+            <span>成本管理</span>
+          </div>
+        </div>
+      </div>
+      <div class="platform-actions">
+        <span class="module-state">待接入成本数据</span>
+        <a class="platform-link" href="../../index.html">返回主页</a>
+      </div>
+    </header>
+
+    <section class="hero">
+      <div class="topbar">
+        <div>
+          <span class="eyebrow">Cost</span>
+          <h1>成本管理</h1>
+          <p class="hero-copy">人工、耗材、物流、设备与异常成本的成本看板入口。</p>
+        </div>
+        <span class="status-pill">暂无数据</span>
+      </div>
+      <div class="metric-grid">
+        <article class="metric"><span>总成本</span><strong>-</strong></article>
+        <article class="metric"><span>人工成本</span><strong>-</strong></article>
+        <article class="metric"><span>耗材成本</span><strong>-</strong></article>
+        <article class="metric"><span>物流成本</span><strong>-</strong></article>
+        <article class="metric"><span>异常成本</span><strong>-</strong></article>
+        <article class="metric"><span>单均成本</span><strong>-</strong></article>
+      </div>
+    </section>
+
+    <main>
+      <section class="grid">
+        <section class="empty-card">
+          <span class="panel-label">No data</span>
+          <strong>成本总览</strong>
+          <p>按日期、模块和业务量沉淀成本结构。</p>
+        </section>
+        <section class="empty-card">
+          <span class="panel-label">No data</span>
+          <strong>成本拆分</strong>
+          <p>展示各类费用占比和变化。</p>
+        </section>
+        <section class="empty-card">
+          <span class="panel-label">No data</span>
+          <strong>异常成本</strong>
+          <p>记录补发、破损、加急等额外成本。</p>
+        </section>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <div>
+            <span class="panel-label">Details</span>
+            <h2>明细记录</h2>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>日期</th><th>类型</th><th>金额</th><th>模块</th><th>关联单量</th><th>备注</th></tr></thead>
+            <tbody><tr class="empty-row"><td colspan="6">暂无数据</td></tr></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>
