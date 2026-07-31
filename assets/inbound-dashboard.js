@@ -63,6 +63,11 @@
     return dates;
   }
 
+  function weeklyTrendDates() {
+    const selectedIndex = Math.max(0, payload.availableDates.indexOf(state.selectedDate));
+    return payload.availableDates.slice(selectedIndex, selectedIndex + 7).reverse();
+  }
+
   function recordsForDateRange() {
     const dates = datesForCurrentRange();
     return payload.days.filter(day => dates.includes(day.date)).flatMap(day => day.records);
@@ -96,6 +101,12 @@
     if (!dates.length) return;
     const statusNode = $("importStatus");
     if (statusNode) statusNode.innerHTML = `<span>正在加载 ${dates.length} 天入库明细...</span>`;
+    await Promise.all(dates.map(loadDayRecords));
+  }
+
+  async function ensureWeeklyTrendRecords() {
+    const dates = weeklyTrendDates();
+    if (!dates.length) return;
     await Promise.all(dates.map(loadDayRecords));
   }
 
@@ -429,8 +440,7 @@
   }
 
   function renderWeeklyTrend() {
-    const selectedIndex = Math.max(0, payload.availableDates.indexOf(state.selectedDate));
-    const dates = payload.availableDates.slice(selectedIndex, selectedIndex + 7).reverse();
+    const dates = weeklyTrendDates();
     const buckets = dates.map(date => {
       const day = dayByDate(date);
       const rows = filterRecords(day.records || []);
@@ -657,7 +667,7 @@
   let renderToken = 0;
   async function render() {
     const token = ++renderToken;
-    await ensureCurrentRangeRecords();
+    await Promise.all([ensureCurrentRangeRecords(), ensureWeeklyTrendRecords()]);
     if (token !== renderToken) return;
     syncUrl();
     const day = currentDay();
