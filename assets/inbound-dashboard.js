@@ -517,7 +517,10 @@
       "数量异常或非数字": records.filter(row => row.warnings.includes("数量异常或非数字")).length,
       "工厂字段格式不规范": records.filter(row => row.warnings.includes("工厂字段格式不规范")).length
     };
-    $("qualitySummary").innerHTML = Object.entries(counts).map(([label, count]) => `<div class="quality-line"><span>${label}</span><strong>${fmt(count)}</strong></div>`).join("");
+    const qualitySummary = $("qualitySummary");
+    if (qualitySummary) {
+      qualitySummary.innerHTML = Object.entries(counts).map(([label, count]) => `<div class="quality-line"><span>${label}</span><strong>${fmt(count)}</strong></div>`).join("");
+    }
   }
 
   function renderSuppliers(records) {
@@ -667,7 +670,7 @@
   let renderToken = 0;
   async function render() {
     const token = ++renderToken;
-    await Promise.all([ensureCurrentRangeRecords(), ensureWeeklyTrendRecords()]);
+    await ensureCurrentRangeRecords();
     if (token !== renderToken) return;
     syncUrl();
     const day = currentDay();
@@ -686,6 +689,9 @@
     renderQuality(day);
     renderSuppliers(rows);
     renderDetails(rows);
+    ensureWeeklyTrendRecords().then(() => {
+      if (token === renderToken) renderWeeklyTrend();
+    });
   }
 
   function bindEvents() {
@@ -823,10 +829,10 @@
     });
     $("prevPage").addEventListener("click", () => { state.page = Math.max(1, state.page - 1); render(); });
     $("nextPage").addEventListener("click", () => { state.page += 1; render(); });
-    $("qualityButton").addEventListener("click", openQuality);
-    $("exportButton").addEventListener("click", () => exportCsv(filteredRecords()));
-    $("importButton").addEventListener("click", () => alert(`当前静态版本已读取数据文件：${currentDay().sourceFile}`));
-    $("drawerBackdrop").addEventListener("click", closeDrawers);
+    $("qualityButton")?.addEventListener("click", openQuality);
+    $("exportButton")?.addEventListener("click", () => exportCsv(filteredRecords()));
+    $("importButton")?.addEventListener("click", () => alert(`当前静态版本已读取数据文件：${currentDay().sourceFile}`));
+    $("drawerBackdrop")?.addEventListener("click", closeDrawers);
     document.querySelectorAll("[data-close-drawer]").forEach(button => button.addEventListener("click", closeDrawers));
   }
 
