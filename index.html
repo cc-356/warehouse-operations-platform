@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
@@ -190,41 +190,325 @@
     .module-grid {
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 10px;
+      gap: 14px;
+      align-items: stretch;
     }
     .module-card {
-      min-height: 118px;
-      padding: 14px 16px;
-      border-radius: 14px;
+      position: relative;
+      min-height: 148px;
+      padding: 22px 24px 20px;
+      border-radius: 8px;
       display: grid;
       align-content: start;
       gap: 8px;
       color: inherit;
       text-decoration: none;
-      background: linear-gradient(145deg, rgba(255,255,255,0.12), rgba(255,255,255,0.045));
-      transition: transform 160ms ease, border-color 160ms ease, background 160ms ease, box-shadow 160ms ease;
+      overflow: hidden;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.14), rgba(255,255,255,0.045)),
+        radial-gradient(circle at 50% 110%, rgba(110,231,210,.10), transparent 48%),
+        linear-gradient(145deg, rgba(255,255,255,0.13), rgba(255,255,255,0.045));
+      z-index: 1;
+      transition: transform 180ms ease, border-color 180ms ease, background 180ms ease, box-shadow 180ms ease, filter 180ms ease;
+    }
+    .module-card::before {
+      content: "";
+      position: absolute;
+      inset: 12px;
+      border-radius: 6px;
+      background:
+        linear-gradient(90deg, rgba(110, 231, 210, 0.24), transparent 34%) left 12px top 8px / 74px 1px no-repeat,
+        linear-gradient(90deg, transparent 0 50%, rgba(255,255,255,0.12) 50% 51%, transparent 51%) right 12px bottom 10px / 96px 42px no-repeat,
+        repeating-linear-gradient(90deg, transparent 0 18px, rgba(201,255,244,0.07) 19px 20px, transparent 21px 42px),
+        repeating-linear-gradient(0deg, transparent 0 18px, rgba(201,255,244,0.045) 19px 20px, transparent 21px 42px);
+      opacity: .48;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .module-card:nth-child(1)::before {
+      background:
+        linear-gradient(90deg, rgba(110, 231, 210, 0.28), transparent 46%) left 12px top 8px / 96px 1px no-repeat,
+        repeating-linear-gradient(90deg, transparent 0 16px, rgba(201,255,244,0.10) 17px 18px, transparent 19px 34px);
+    }
+    .module-card:nth-child(2)::before {
+      background:
+        linear-gradient(90deg, rgba(110, 231, 210, 0.25), transparent 40%) left 12px top 8px / 82px 1px no-repeat,
+        repeating-linear-gradient(0deg, transparent 0 18px, rgba(201,255,244,0.10) 19px 20px, transparent 21px 36px);
+    }
+    .module-card:nth-child(3)::before {
+      background:
+        linear-gradient(125deg, rgba(110, 231, 210, 0.22), transparent 40%) left 12px top 8px / 94px 38px no-repeat,
+        linear-gradient(90deg, transparent 0 42%, rgba(255,255,255,0.13) 43% 44%, transparent 45%);
+    }
+    .module-card:nth-child(4)::before {
+      background:
+        linear-gradient(90deg, rgba(110, 231, 210, 0.24), transparent 34%) left 12px top 8px / 78px 1px no-repeat,
+        repeating-linear-gradient(135deg, transparent 0 18px, rgba(201,255,244,0.08) 19px 20px, transparent 21px 40px);
+    }
+    .module-card:nth-child(5)::before {
+      background:
+        linear-gradient(90deg, rgba(110, 231, 210, 0.22), transparent 38%) left 12px top 8px / 80px 1px no-repeat,
+        linear-gradient(135deg, transparent 0 48%, rgba(255,255,255,0.16) 49% 51%, transparent 52%) right 8px bottom 8px / 82px 42px no-repeat;
+    }
+    .module-card:nth-child(6)::before {
+      background:
+        linear-gradient(90deg, rgba(110, 231, 210, 0.24), transparent 36%) left 12px top 8px / 76px 1px no-repeat,
+        repeating-linear-gradient(90deg, transparent 0 22px, rgba(201,255,244,0.09) 23px 24px, transparent 25px 46px);
+    }
+    .module-card:nth-child(7)::before {
+      background:
+        linear-gradient(90deg, rgba(110, 231, 210, 0.25), transparent 36%) left 12px top 8px / 74px 1px no-repeat,
+        repeating-linear-gradient(90deg, rgba(201,255,244,0.09) 0 8px, transparent 9px 22px) left bottom / 112px 36px no-repeat;
+    }
+    .module-card:nth-child(8)::before {
+      background:
+        linear-gradient(90deg, rgba(110, 231, 210, 0.25), transparent 36%) left 12px top 8px / 74px 1px no-repeat,
+        repeating-linear-gradient(90deg, transparent 0 14px, rgba(201,255,244,0.10) 15px 16px, transparent 17px 28px),
+        repeating-linear-gradient(0deg, transparent 0 14px, rgba(201,255,244,0.08) 15px 16px, transparent 17px 28px);
+    }
+    .module-card::after {
+      content: attr(data-mark);
+      position: absolute;
+      top: 14px;
+      right: 16px;
+      width: 28px;
+      height: 28px;
+      border: 1px solid rgba(255,255,255,0.24);
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      color: #fff;
+      background: rgba(215, 25, 32, 0.70);
+      box-shadow: 0 0 18px rgba(215, 25, 32, 0.25);
+      font-size: 14px;
+      font-weight: 900;
+      line-height: 1;
+      z-index: 2;
     }
     .module-card:hover {
-      transform: translateY(-2px);
       border-color: rgba(168, 255, 238, 0.34);
       background: linear-gradient(145deg, rgba(110, 231, 210, 0.20), rgba(255,255,255,0.07));
       box-shadow: 0 18px 42px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255,255,255,0.18);
+      filter: brightness(1.12);
+      transform: translateY(-6px) scale(1.018);
     }
     .module-card strong {
+      position: relative;
+      z-index: 1;
+      padding-right: 38px;
       color: var(--ink);
       font-size: 18px;
       line-height: 1.22;
     }
     .module-card p {
+      position: relative;
+      z-index: 1;
       color: var(--muted);
       line-height: 1.45;
       font-size: 12px;
+    }
+    .module-pattern {
+      position: absolute;
+      right: 8px;
+      bottom: 4px;
+      width: clamp(138px, 43%, 168px);
+      height: 94px;
+      color: rgba(218, 255, 250, 0.76);
+      opacity: .62;
+      pointer-events: none;
+      z-index: 0;
+      filter:
+        drop-shadow(0 0 12px rgba(110, 231, 210, 0.24))
+        drop-shadow(0 0 24px rgba(62, 166, 255, 0.12));
+      transition: opacity 180ms ease, transform 180ms ease, color 180ms ease, filter 180ms ease;
+    }
+    .module-pattern::before {
+      content: "";
+      position: absolute;
+      inset: 14px 8px 10px;
+      border: 1px solid rgba(201, 255, 244, 0.12);
+      border-radius: 6px;
+      background:
+        radial-gradient(circle at 78% 24%, rgba(215, 25, 32, 0.18), transparent 20%),
+        linear-gradient(180deg, rgba(126, 223, 255, 0.12), transparent 64%);
+      opacity: .58;
+    }
+    .module-pattern svg {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      height: 100%;
+      display: block;
+      overflow: visible;
+    }
+    .module-pattern path,
+    .module-pattern line,
+    .module-pattern polyline,
+    .module-pattern rect,
+    .module-pattern circle {
+      vector-effect: non-scaling-stroke;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .module-pattern [fill="#d71920"],
+    .module-pattern [stroke="#d71920"] {
+      filter: drop-shadow(0 0 8px rgba(215, 25, 32, 0.56));
+    }
+    .module-pattern .motion-node,
+    .module-pattern .motion-arrow,
+    .module-pattern .inbound-cargo,
+    .module-pattern .quality-shield,
+    .module-pattern .shield-sweep,
+    .module-pattern .gear-wheel,
+    .module-pattern .truck-body,
+    .module-pattern .truck-wheel,
+    .module-pattern .cost-bar,
+    .module-pattern .schedule-grid {
+      transform-box: fill-box;
+      transform-origin: center;
+    }
+    .pattern-equipment .gear-wheel {
+      transform: rotate(22.5deg);
+    }
+    .module-card:hover .module-pattern {
+      color: rgba(240, 255, 252, 0.92);
+      opacity: .86;
+      filter:
+        drop-shadow(0 0 16px rgba(110, 231, 210, 0.34))
+        drop-shadow(0 0 34px rgba(62, 166, 255, 0.18));
+      transform: translateY(-5px) scale(1.04);
+    }
+    .module-card:hover .motion-dash {
+      stroke-dasharray: 22 12;
+      animation: patternDash 1.1s linear infinite;
+    }
+    .module-card:hover .motion-node {
+      animation: nodePulse 1.15s ease-in-out infinite;
+    }
+    .module-card:hover .motion-arrow {
+      animation: arrowNudge 1.05s ease-in-out infinite;
+    }
+    .module-card:hover .pattern-inbound .inbound-cargo {
+      animation: cargoSlide 1.35s ease-in-out infinite;
+    }
+    .module-card:hover .pattern-inbound .inbound-cargo.secondary {
+      animation-delay: .18s;
+    }
+    .module-card:hover .pattern-outbound .truck-body {
+      animation: truckMove 1.35s ease-in-out infinite;
+    }
+    .module-card:hover .pattern-outbound .truck-wheel {
+      animation: wheelSpin .72s linear infinite;
+    }
+    .module-card:hover .pattern-workforce .trend-line {
+      stroke-dasharray: 30 16;
+      animation: patternDash 1.25s linear infinite;
+    }
+    .module-card:hover .pattern-inventory .shelf-fill {
+      animation: inventoryGlow 1.25s ease-in-out infinite;
+    }
+    .module-card:hover .pattern-quality .quality-shield {
+      animation: softPulse 1.35s ease-in-out infinite;
+    }
+    .pattern-quality .shield-sweep {
+      opacity: 0;
+      transform: translate(-42px, -8px);
+    }
+    .module-card:hover .pattern-quality .shield-sweep {
+      animation: shieldSweep 1.35s ease-in-out infinite;
+    }
+    .module-card:hover .pattern-equipment .gear-wheel {
+      animation: gearSpin 3.2s linear infinite;
+      transform-box: fill-box;
+      transform-origin: center;
+    }
+    .module-card:hover .pattern-cost .cost-bar {
+      animation: barLift 1.2s ease-in-out infinite;
+    }
+    .module-card:hover .pattern-cost .cost-bar:nth-of-type(2) {
+      animation-delay: .12s;
+    }
+    .module-card:hover .pattern-cost .cost-bar:nth-of-type(3) {
+      animation-delay: .24s;
+    }
+    .module-card:hover .pattern-scheduling .schedule-grid {
+      animation: softPulse 1.45s ease-in-out infinite;
+    }
+    @keyframes patternDash {
+      to { stroke-dashoffset: -34; }
+    }
+    @keyframes nodePulse {
+      0%, 100% { opacity: .54; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.24); }
+    }
+    @keyframes arrowNudge {
+      0%, 100% { transform: translateX(0); }
+      50% { transform: translateX(7px); }
+    }
+    @keyframes truckMove {
+      0%, 100% { transform: translateX(0); }
+      50% { transform: translateX(9px); }
+    }
+    @keyframes cargoSlide {
+      0%, 100% { transform: translateX(0); opacity: .58; }
+      48% { transform: translateX(13px); opacity: .92; }
+      70% { transform: translateX(17px); opacity: .34; }
+    }
+    @keyframes wheelSpin {
+      to { transform: rotate(360deg); }
+    }
+    @keyframes inventoryGlow {
+      0%, 100% { opacity: .20; }
+      50% { opacity: .52; }
+    }
+    @keyframes softPulse {
+      0%, 100% { opacity: .72; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.035); }
+    }
+    @keyframes shieldSweep {
+      0% { opacity: 0; transform: translate(-42px, -8px); }
+      18% { opacity: .16; }
+      46% { opacity: .92; transform: translate(2px, 0); }
+      76% { opacity: .28; }
+      100% { opacity: 0; transform: translate(46px, 9px); }
+    }
+    @keyframes gearSpin {
+      0% { transform: rotate(22.5deg); }
+      100% { transform: rotate(382.5deg); }
+    }
+    @keyframes barLift {
+      0%, 100% { transform: translateY(0); opacity: .28; }
+      50% { transform: translateY(-6px); opacity: .62; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .module-card:hover .motion-dash,
+      .module-card:hover .motion-node,
+      .module-card:hover .motion-arrow,
+      .module-card:hover .inbound-cargo,
+      .module-card:hover .truck-body,
+      .module-card:hover .truck-wheel,
+      .module-card:hover .trend-line,
+      .module-card:hover .shelf-fill,
+      .module-card:hover .quality-shield,
+      .module-card:hover .shield-sweep,
+      .module-card:hover .gear-wheel,
+      .module-card:hover .cost-bar,
+      .module-card:hover .schedule-grid {
+        animation: none;
+      }
     }
     .side-panel {
       padding: 18px;
       border-radius: 22px;
       background: linear-gradient(145deg, rgba(18, 26, 29, 0.38), rgba(8, 14, 16, 0.24));
       overflow: hidden;
+    }
+    .hero > .side-panel {
+      border-color: transparent;
+      box-shadow: none;
+      background: transparent;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
     }
     .status-pill {
       padding: 8px 12px;
@@ -272,7 +556,12 @@
         min-height: auto;
       }
     }
-    @media (max-width: 760px) {
+    @media (max-width: 860px) {
+      .module-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+    @media (max-width: 560px) {
       .page {
         padding: 16px;
       }
@@ -283,7 +572,28 @@
       .side-panel {
         padding: 20px;
       }
-      .module-grid, .metric-grid {
+      .module-grid {
+        min-height: auto;
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      .module-grid::before,
+      .module-grid::after {
+        display: none;
+      }
+      .module-card,
+      .module-card:nth-child(n),
+      .module-card:nth-child(n):hover {
+        position: relative;
+        left: auto;
+        top: auto;
+        right: auto;
+        bottom: auto;
+        width: 100%;
+        transform: none;
+      }
+      .metric-grid {
         grid-template-columns: 1fr;
       }
       h1 {
@@ -314,37 +624,169 @@
     <main class="hero">
       <section class="side-panel">
         <div class="module-grid">
-          <a class="module-card" href="modules/workforce/index.html">
+          <a class="module-card" data-mark="人" href="modules/workforce/index.html">
             <strong>员工工作量与人效</strong>
             <p>人员工作量、工种汇总、效率与历史趋势</p>
+            <span class="module-pattern pattern-workforce" aria-hidden="true">
+              <svg viewBox="0 0 120 72" fill="none">
+                <path class="trend-line" d="M10 58 C28 40 42 44 56 30 S84 20 108 13" stroke="currentColor" stroke-width="1.5" opacity=".72"/>
+                <circle cx="24" cy="33" r="6.4" stroke="currentColor" stroke-width="1.3"/>
+                <path d="M12 53 C16 46 32 46 36 53" stroke="currentColor" stroke-width="1.3"/>
+                <circle cx="58" cy="29" r="5.8" stroke="currentColor" stroke-width="1.2" opacity=".84"/>
+                <path d="M48 48 C52 42 65 42 69 48" stroke="currentColor" stroke-width="1.2" opacity=".84"/>
+                <circle class="motion-node" cx="92" cy="20" r="5" stroke="#d71920" stroke-width="1.4" opacity=".82"/>
+                <line x1="18" y1="62" x2="108" y2="62" stroke="currentColor" stroke-width="1" opacity=".32"/>
+              </svg>
+            </span>
           </a>
-          <a class="module-card" href="modules/inventory/index.html">
+          <a class="module-card" data-mark="库" href="modules/inventory/index.html">
             <strong>库存管理</strong>
-            <p>五仓库存快照、Top SKU、库位库存与日期切换</p>
+            <p>库存快照、Top SKU、库位库存</p>
+            <span class="module-pattern pattern-inventory" aria-hidden="true">
+              <svg viewBox="0 0 120 72" fill="none">
+                <rect x="16" y="14" width="88" height="46" rx="4" stroke="currentColor" stroke-width="1.4"/>
+                <line x1="16" y1="30" x2="104" y2="30" stroke="currentColor" stroke-width="1" opacity=".58"/>
+                <line x1="16" y1="46" x2="104" y2="46" stroke="currentColor" stroke-width="1" opacity=".58"/>
+                <line x1="44" y1="14" x2="44" y2="60" stroke="currentColor" stroke-width="1" opacity=".45"/>
+                <line x1="74" y1="14" x2="74" y2="60" stroke="currentColor" stroke-width="1" opacity=".45"/>
+                <rect class="shelf-fill" x="22" y="34" width="16" height="9" fill="currentColor" opacity=".16"/>
+                <rect class="shelf-fill" x="50" y="19" width="18" height="8" fill="currentColor" opacity=".18"/>
+                <rect class="shelf-fill motion-node" x="80" y="50" width="16" height="7" fill="#d71920" opacity=".34"/>
+              </svg>
+            </span>
           </a>
-          <a class="module-card" href="modules/inbound/index.html">
+          <a class="module-card" data-mark="入" href="modules/inbound/index.html">
             <strong>入库管理</strong>
             <p>采购到货、收货、上架与入库差异追踪</p>
+            <span class="module-pattern pattern-inbound" aria-hidden="true">
+              <svg viewBox="0 0 120 72" fill="none">
+                <path d="M78 18 H104 V58 H78" stroke="currentColor" stroke-width="1.4"/>
+                <path class="motion-arrow" d="M20 36 H78" stroke="currentColor" stroke-width="1.6"/>
+                <path class="motion-arrow" d="M64 24 L78 36 L64 48" stroke="currentColor" stroke-width="1.6"/>
+                <path class="inbound-cargo" d="M30 24 H52 V36 H30 Z" stroke="currentColor" stroke-width="1.1" opacity=".55"/>
+                <path class="inbound-cargo secondary" d="M20 50 H48 V60 H20 Z" stroke="currentColor" stroke-width="1.1" opacity=".42"/>
+                <circle class="motion-node" cx="84" cy="36" r="4" fill="#d71920" opacity=".62"/>
+                <line x1="92" y1="24" x2="92" y2="54" stroke="currentColor" stroke-width="1" opacity=".34"/>
+              </svg>
+            </span>
           </a>
-          <a class="module-card" href="modules/outbound/index.html">
+          <a class="module-card" data-mark="出" href="modules/outbound/index.html">
             <strong>出库管理</strong>
             <p>拣货、复核、称重、打包与发货流程看板</p>
+            <span class="module-pattern pattern-outbound" aria-hidden="true">
+              <svg viewBox="0 0 120 72" fill="none">
+                <g class="truck-body">
+                  <rect x="16" y="26" width="34" height="20" rx="2" stroke="currentColor" stroke-width="1.3"/>
+                  <path d="M50 31 H68 L76 39 V46 H50 Z" stroke="currentColor" stroke-width="1.3"/>
+                  <g class="truck-wheel">
+                    <circle cx="28" cy="50" r="3" stroke="currentColor" stroke-width="1"/>
+                    <path d="M28 47 V53 M25 50 H31" stroke="currentColor" stroke-width=".75" opacity=".72"/>
+                  </g>
+                  <g class="truck-wheel">
+                    <circle cx="64" cy="50" r="3" stroke="currentColor" stroke-width="1"/>
+                    <path d="M64 47 V53 M61 50 H67" stroke="currentColor" stroke-width=".75" opacity=".72"/>
+                  </g>
+                </g>
+                <path class="motion-arrow" d="M74 36 H106" stroke="currentColor" stroke-width="1.6"/>
+                <path class="motion-arrow" d="M94 25 L108 36 L94 47" stroke="currentColor" stroke-width="1.6"/>
+                <circle class="motion-node" cx="83" cy="36" r="3.5" fill="#d71920" opacity=".62"/>
+                <line x1="14" y1="56" x2="108" y2="56" stroke="currentColor" stroke-width="1" opacity=".28"/>
+              </svg>
+            </span>
           </a>
-          <a class="module-card" href="modules/quality/index.html">
+          <a class="module-card" data-mark="质" href="modules/quality/index.html">
             <strong>质量管理</strong>
             <p>差错、复核、异常与质量改进记录</p>
+            <span class="module-pattern pattern-quality" aria-hidden="true">
+              <svg viewBox="0 0 120 72" fill="none">
+                <defs>
+                  <clipPath id="qualityShieldClip">
+                    <path d="M62 12 L92 22 V39 C92 52 80 61 62 66 C44 61 32 52 32 39 V22 L62 12 Z"/>
+                  </clipPath>
+                  <linearGradient id="qualityShieldSweep" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0" stop-color="#ffffff" stop-opacity="0"/>
+                    <stop offset=".42" stop-color="#ffffff" stop-opacity=".92"/>
+                    <stop offset=".62" stop-color="#9ff4ff" stop-opacity=".78"/>
+                    <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+                  </linearGradient>
+                </defs>
+                <path class="quality-shield" d="M62 12 L92 22 V39 C92 52 80 61 62 66 C44 61 32 52 32 39 V22 L62 12 Z" stroke="currentColor" stroke-width="1.5"/>
+                <g clip-path="url(#qualityShieldClip)">
+                  <path class="shield-sweep" d="M36 14 L43 12 L89 55 L83 58 Z" fill="url(#qualityShieldSweep)"/>
+                </g>
+                <path class="motion-dash" d="M48 38 L58 48 L78 28" stroke="currentColor" stroke-width="2"/>
+                <path d="M18 20 H34 M18 34 H28 M18 48 H36" stroke="currentColor" stroke-width="1" opacity=".42"/>
+                <circle class="motion-node" cx="91" cy="22" r="3.5" fill="#d71920" opacity=".66"/>
+                <circle cx="62" cy="39" r="25" stroke="currentColor" stroke-width="1" opacity=".18"/>
+              </svg>
+            </span>
           </a>
-          <a class="module-card" href="modules/equipment/index.html">
+          <a class="module-card" data-mark="设" href="modules/equipment/index.html">
             <strong>设备管理</strong>
             <p>仓储设备状态、维护与使用记录</p>
+            <span class="module-pattern pattern-equipment" aria-hidden="true">
+              <svg viewBox="0 0 120 72" fill="none">
+                <g transform="translate(72 38)">
+                  <g class="gear-wheel">
+                  <g fill="rgba(201,255,244,.20)" stroke="currentColor" stroke-width="1.4" opacity=".96">
+                    <path d="M-5 -34 L5 -34 L8 -22 L-8 -22 Z"/>
+                    <path d="M-5 -34 L5 -34 L8 -22 L-8 -22 Z" transform="rotate(90)"/>
+                    <path d="M-5 -34 L5 -34 L8 -22 L-8 -22 Z" transform="rotate(180)"/>
+                    <path d="M-5 -34 L5 -34 L8 -22 L-8 -22 Z" transform="rotate(270)"/>
+                    <path d="M-5 -34 L5 -34 L8 -22 L-8 -22 Z" transform="rotate(45)"/>
+                    <path d="M-5 -34 L5 -34 L8 -22 L-8 -22 Z" transform="rotate(135)"/>
+                    <path d="M-5 -34 L5 -34 L8 -22 L-8 -22 Z" transform="rotate(225)"/>
+                    <path d="M-5 -34 L5 -34 L8 -22 L-8 -22 Z" transform="rotate(315)"/>
+                  </g>
+                  <circle r="24" fill="rgba(10,42,68,.40)" stroke="currentColor" stroke-width="5.5" opacity=".72"/>
+                  <g fill="rgba(201,255,244,.30)" stroke="currentColor" stroke-width="1" opacity=".86">
+                    <path d="M-4 -22 L4 -22 L4 -6 L-4 -6 Z"/>
+                    <path d="M-4 -22 L4 -22 L4 -6 L-4 -6 Z" transform="rotate(120)"/>
+                    <path d="M-4 -22 L4 -22 L4 -6 L-4 -6 Z" transform="rotate(240)"/>
+                  </g>
+                  <circle r="12" fill="rgba(201,255,244,.28)" stroke="currentColor" stroke-width="1.8"/>
+                  <circle r="5.8" fill="rgba(5,14,24,.88)" stroke="currentColor" stroke-width="1.6"/>
+                  <path d="M-19 -10 A22 22 0 0 1 14 -17" stroke="rgba(255,255,255,.54)" stroke-width="1.4" opacity=".62"/>
+                  <path d="M-20 12 A24 24 0 0 0 16 17" stroke="currentColor" stroke-width="1.2" opacity=".36"/>
+                  </g>
+                </g>
+                <circle class="motion-node" cx="104" cy="19" r="4" fill="#d71920" opacity=".74"/>
+                <circle class="motion-node" cx="90" cy="58" r="2.6" fill="#d71920" opacity=".48"/>
+                <line x1="18" y1="62" x2="108" y2="62" stroke="currentColor" stroke-width="1" opacity=".18"/>
+              </svg>
+            </span>
           </a>
-          <a class="module-card" href="modules/cost/index.html">
+          <a class="module-card" data-mark="本" href="modules/cost/index.html">
             <strong>成本管理</strong>
             <p>人工、耗材、物流与运营成本分析</p>
+            <span class="module-pattern pattern-cost" aria-hidden="true">
+              <svg viewBox="0 0 120 72" fill="none">
+                <line x1="18" y1="58" x2="104" y2="58" stroke="currentColor" stroke-width="1"/>
+                <rect class="cost-bar" x="26" y="38" width="10" height="20" fill="currentColor" opacity=".20"/>
+                <rect class="cost-bar" x="44" y="28" width="10" height="30" fill="currentColor" opacity=".28"/>
+                <rect class="cost-bar" x="62" y="18" width="10" height="40" fill="currentColor" opacity=".36"/>
+                <path class="motion-dash" d="M24 26 C40 18 54 28 70 20 S94 16 104 10" stroke="currentColor" stroke-width="1.4" opacity=".66"/>
+                <circle class="motion-node" cx="94" cy="18" r="12" stroke="currentColor" stroke-width="1.2"/>
+                <text x="94" y="22" text-anchor="middle" font-size="13" font-weight="800" fill="#d71920" opacity=".78">¥</text>
+              </svg>
+            </span>
           </a>
-          <a class="module-card" href="modules/scheduling/index.html">
+          <a class="module-card" data-mark="班" href="modules/scheduling/index.html">
             <strong>排班管理</strong>
             <p>班次、出勤、工时与人员安排</p>
+            <span class="module-pattern pattern-scheduling" aria-hidden="true">
+              <svg viewBox="0 0 120 72" fill="none">
+                <rect class="schedule-grid" x="22" y="14" width="76" height="48" rx="5" stroke="currentColor" stroke-width="1.4"/>
+                <line x1="22" y1="28" x2="98" y2="28" stroke="currentColor" stroke-width="1"/>
+                <line x1="42" y1="28" x2="42" y2="62" stroke="currentColor" stroke-width="1" opacity=".42"/>
+                <line x1="61" y1="28" x2="61" y2="62" stroke="currentColor" stroke-width="1" opacity=".42"/>
+                <line x1="80" y1="28" x2="80" y2="62" stroke="currentColor" stroke-width="1" opacity=".42"/>
+                <line x1="22" y1="44" x2="98" y2="44" stroke="currentColor" stroke-width="1" opacity=".42"/>
+                <circle class="motion-node" cx="50" cy="36" r="3" fill="#d71920" opacity=".62"/>
+                <circle class="motion-node" cx="69" cy="52" r="3" fill="currentColor" opacity=".42"/>
+                <path d="M32 18 V10 M88 18 V10" stroke="currentColor" stroke-width="1.5"/>
+              </svg>
+            </span>
           </a>
         </div>
       </section>
@@ -649,3 +1091,4 @@
 
 </body>
 </html>
+

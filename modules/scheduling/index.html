@@ -5,66 +5,82 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>仓库运营管理平台 - 排班管理</title>
   <style>
-
     :root {
-      --bg: #070b0d;
-      --paper: rgba(15, 20, 22, 0.82);
-      --paper-strong: rgba(24, 31, 34, 0.86);
-      --ink: #eef5f1;
-      --muted: #8a9a96;
-      --line: rgba(210, 235, 225, 0.12);
+      --bg: #090d10;
+      --panel: rgba(16, 22, 25, 0.86);
+      --panel-strong: rgba(23, 31, 35, 0.94);
+      --ink: #edf5f1;
+      --muted: #91a09b;
+      --line: rgba(210, 235, 225, 0.13);
       --accent: #6ee7d2;
       --accent-strong: #c9fff4;
-      --accent-soft: rgba(73, 211, 190, 0.13);
-      --warn: #ffb19b;
-      --gold-soft: rgba(232, 193, 112, 0.12);
-      --shadow: 0 26px 90px rgba(0, 0, 0, 0.42);
-      --radius: 26px;
+      --accent-soft: rgba(110, 231, 210, 0.11);
+      --amber: #f8d17f;
+      --amber-soft: rgba(248, 209, 127, 0.12);
+      --red: #ff9f95;
+      --red-soft: rgba(255, 159, 149, 0.12);
+      --green: #86efac;
+      --green-soft: rgba(134, 239, 172, 0.11);
+      --shadow: 0 24px 80px rgba(0, 0, 0, 0.36);
+      --radius: 18px;
     }
+
     * { box-sizing: border-box; }
-    html { scroll-behavior: smooth; }
+
     body {
       margin: 0;
       min-height: 100vh;
       color: var(--ink);
-      font: 15px/1.6 "IBM Plex Sans", "PingFang SC", "Microsoft YaHei", sans-serif;
+      font: 15px/1.6 "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
       background:
         linear-gradient(rgba(169, 222, 211, 0.035) 1px, transparent 1px),
         linear-gradient(90deg, rgba(169, 222, 211, 0.035) 1px, transparent 1px),
-        radial-gradient(circle at 8% 0%, rgba(74, 211, 190, 0.16), transparent 25%),
-        radial-gradient(circle at 100% 10%, rgba(232, 193, 112, 0.10), transparent 21%),
-        linear-gradient(180deg, #071012 0%, #0b1114 46%, #070b0d 100%);
+        radial-gradient(circle at 8% 0%, rgba(110, 231, 210, 0.14), transparent 25%),
+        radial-gradient(circle at 100% 8%, rgba(248, 209, 127, 0.10), transparent 24%),
+        linear-gradient(180deg, #081113 0%, #0b1114 48%, #070b0d 100%);
       background-size: 24px 24px, 24px 24px, auto, auto, auto;
     }
+
+    a { color: inherit; }
+
     .page {
-      max-width: 1700px;
+      width: min(1720px, 100%);
       margin: 0 auto;
-      padding: 24px 24px 64px;
+      padding: 24px 24px 56px;
     }
-    .platform-header, .hero, .panel, .metric, .empty-card {
-      background: var(--paper);
+
+    .platform-header,
+    .hero,
+    .panel,
+    .metric,
+    .coverage-card,
+    .shift-card,
+    .warning-card {
       border: 1px solid var(--line);
-      border-radius: var(--radius);
+      background: var(--panel);
       box-shadow: var(--shadow);
       backdrop-filter: blur(18px);
     }
+
     .platform-header {
       min-height: 72px;
-      margin-bottom: 20px;
+      margin-bottom: 18px;
       padding: 12px 16px;
+      border-radius: 22px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 18px;
-      border-radius: 22px;
-      background: linear-gradient(180deg, rgba(15, 25, 27, 0.92), rgba(9, 17, 19, 0.86));
+      background: linear-gradient(180deg, rgba(15, 25, 27, 0.94), rgba(9, 17, 19, 0.88));
     }
+
     .platform-identity {
       min-width: 0;
       display: flex;
       align-items: center;
       gap: 14px;
     }
+
     .platform-mark {
       width: 40px;
       height: 40px;
@@ -76,16 +92,18 @@
       background: #fff;
       box-shadow: inset 0 0 0 1px rgba(255,255,255,.86), 0 12px 34px rgba(0,0,0,.22);
     }
+
     .platform-title {
       min-width: 0;
       display: grid;
       gap: 5px;
     }
+
     .platform-title strong {
-      color: var(--ink);
       font-size: 16px;
       line-height: 1.2;
     }
+
     .platform-breadcrumb {
       display: flex;
       align-items: center;
@@ -95,169 +113,354 @@
       font-size: 13px;
       white-space: nowrap;
     }
+
     .platform-breadcrumb span:last-child {
-      min-width: 0;
       overflow: hidden;
       color: var(--accent-strong);
       text-overflow: ellipsis;
     }
+
     .platform-actions {
       display: flex;
       align-items: center;
       gap: 10px;
       flex: 0 0 auto;
     }
-    .module-state {
-      min-height: 36px;
-      padding: 8px 12px;
+
+    .module-state,
+    .status-pill,
+    .tag,
+    .tab {
       border-radius: 999px;
       display: inline-flex;
       align-items: center;
-      border: 1px solid rgba(110, 231, 210, 0.16);
-      color: var(--accent-strong);
-      background: rgba(110, 231, 210, 0.08);
-      font-size: 13px;
-      font-weight: 700;
+      justify-content: center;
       white-space: nowrap;
+      font-weight: 800;
     }
-    .platform-link {
+
+    .module-state {
+      min-height: 36px;
+      padding: 8px 12px;
+      border: 1px solid rgba(110, 231, 210, 0.18);
+      color: var(--accent-strong);
+      background: var(--accent-soft);
+      font-size: 13px;
+    }
+
+    .platform-link,
+    .ghost-button {
       min-height: 38px;
       padding: 9px 13px;
       border-radius: 12px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      color: #061311;
-      background: linear-gradient(135deg, var(--accent), #fff1cb);
-      border: 1px solid rgba(255, 241, 203, 0.18);
-      box-shadow: 0 14px 34px rgba(110, 231, 210, 0.14);
+      border: 1px solid rgba(255, 255, 255, 0.12);
       font: inherit;
       font-weight: 800;
       text-decoration: none;
       white-space: nowrap;
     }
+
+    .platform-link {
+      color: #061311;
+      background: linear-gradient(135deg, var(--accent), #fff1cb);
+      border-color: rgba(255, 241, 203, 0.18);
+      box-shadow: 0 14px 34px rgba(110, 231, 210, 0.14);
+    }
+
+    .ghost-button {
+      color: var(--accent-strong);
+      background: rgba(255, 255, 255, 0.035);
+    }
+
     .hero {
-      padding: 34px 36px;
-      margin-bottom: 20px;
+      margin-bottom: 18px;
+      padding: 30px;
+      border-radius: 24px;
       overflow: hidden;
     }
-    .topbar {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
+
+    .hero-head {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
       gap: 18px;
+      align-items: start;
       margin-bottom: 24px;
     }
-    .eyebrow, .panel-label {
-      display: inline-flex;
+
+    .eyebrow,
+    .panel-label {
       margin-bottom: 9px;
+      display: inline-flex;
       color: var(--accent-strong);
       font-size: 12px;
       font-weight: 800;
       letter-spacing: 0;
       text-transform: uppercase;
     }
+
     h1, h2, h3, p { margin: 0; }
+
     h1 {
       max-width: 900px;
-      font-size: clamp(34px, 5vw, 68px);
+      font-size: clamp(34px, 5vw, 66px);
       line-height: 0.98;
       letter-spacing: 0;
     }
+
     h2 {
-      color: var(--ink);
       font-size: 22px;
-      line-height: 1.22;
-      letter-spacing: 0;
+      line-height: 1.24;
     }
+
     h3 {
-      color: var(--ink);
       font-size: 17px;
-      line-height: 1.3;
-      letter-spacing: 0;
+      line-height: 1.28;
     }
-    .hero-copy, .panel p, .empty-note {
-      max-width: 760px;
+
+    .hero-copy,
+    .panel-note,
+    .muted {
       color: var(--muted);
       line-height: 1.72;
     }
-    .status-pill {
-      padding: 8px 12px;
-      border: 1px solid rgba(255, 177, 155, 0.22);
-      border-radius: 999px;
-      color: var(--warn);
-      background: rgba(255, 177, 155, 0.08);
-      font-size: 13px;
-      font-weight: 800;
-      white-space: nowrap;
+
+    .hero-copy {
+      max-width: 820px;
+      margin-top: 14px;
     }
+
+    .status-pill {
+      min-height: 34px;
+      padding: 7px 12px;
+      border: 1px solid rgba(248, 209, 127, 0.26);
+      color: var(--amber);
+      background: var(--amber-soft);
+      font-size: 13px;
+    }
+
     .metric-grid {
       display: grid;
       grid-template-columns: repeat(6, minmax(0, 1fr));
       gap: 12px;
     }
+
     .metric {
       min-height: 116px;
-      padding: 18px;
-      border-radius: 18px;
-      background: rgba(255,255,255,0.035);
+      padding: 17px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.035);
     }
+
     .metric span {
       display: block;
       color: var(--muted);
       font-size: 13px;
       white-space: nowrap;
     }
+
     .metric strong {
       display: block;
-      margin-top: 14px;
-      color: var(--ink);
+      margin-top: 13px;
       font-size: 30px;
       line-height: 1;
       letter-spacing: 0;
     }
+
+    .metric small {
+      display: block;
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
     main {
       display: grid;
-      gap: 20px;
+      gap: 18px;
     }
-    .grid {
+
+    .toolbar {
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      background: rgba(255, 255, 255, 0.035);
+    }
+
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .tab {
+      min-height: 34px;
+      padding: 7px 12px;
+      border: 1px solid var(--line);
+      color: var(--muted);
+      background: rgba(255, 255, 255, 0.032);
+      cursor: pointer;
+    }
+
+    .tab.active {
+      color: #061311;
+      border-color: rgba(110, 231, 210, 0.62);
+      background: linear-gradient(135deg, var(--accent), #e9fff8);
+    }
+
+    .layout {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 20px;
+      grid-template-columns: minmax(0, 1.2fr) minmax(340px, 0.8fr);
+      gap: 18px;
+      align-items: start;
     }
+
     .panel {
-      padding: 24px;
+      padding: 22px;
+      border-radius: var(--radius);
     }
+
     .panel-head {
+      margin-bottom: 16px;
       display: flex;
       align-items: flex-start;
       justify-content: space-between;
       gap: 14px;
-      margin-bottom: 16px;
     }
-    .empty-card {
-      min-height: 168px;
-      padding: 20px;
+
+    .panel-title {
       display: grid;
-      align-content: center;
-      gap: 10px;
-      border-radius: 18px;
-      background: rgba(255,255,255,0.035);
+      gap: 5px;
     }
-    .empty-card strong {
+
+    .coverage-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .coverage-card {
+      padding: 16px;
+      border-radius: 15px;
+      background: rgba(255, 255, 255, 0.035);
+    }
+
+    .coverage-card header {
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .coverage-card strong {
       font-size: 18px;
-      color: var(--ink);
     }
+
+    .tag {
+      min-height: 26px;
+      padding: 4px 9px;
+      border: 1px solid rgba(134, 239, 172, 0.24);
+      color: var(--green);
+      background: var(--green-soft);
+      font-size: 12px;
+    }
+
+    .tag.warn {
+      border-color: rgba(248, 209, 127, 0.28);
+      color: var(--amber);
+      background: var(--amber-soft);
+    }
+
+    .tag.danger {
+      border-color: rgba(255, 159, 149, 0.28);
+      color: var(--red);
+      background: var(--red-soft);
+    }
+
+    .coverage-numbers {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .coverage-numbers span {
+      padding: 9px;
+      border-radius: 12px;
+      display: grid;
+      gap: 4px;
+      color: var(--muted);
+      background: rgba(255, 255, 255, 0.04);
+      font-size: 12px;
+    }
+
+    .coverage-numbers b {
+      color: var(--ink);
+      font-size: 18px;
+      line-height: 1;
+    }
+
+    .shift-list,
+    .warning-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .shift-card,
+    .warning-card {
+      padding: 15px;
+      border-radius: 15px;
+      background: rgba(255, 255, 255, 0.035);
+    }
+
+    .shift-card {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      gap: 14px;
+      align-items: center;
+    }
+
+    .time-block {
+      width: 72px;
+      min-height: 58px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      color: #061311;
+      background: linear-gradient(135deg, var(--accent), #fff1cb);
+      font-weight: 900;
+      line-height: 1.15;
+      text-align: center;
+    }
+
+    .shift-main {
+      min-width: 0;
+      display: grid;
+      gap: 4px;
+    }
+
+    .shift-meta {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
     .table-wrap {
       overflow: auto;
       border: 1px solid var(--line);
       border-radius: 14px;
     }
+
     table {
       width: 100%;
+      min-width: 860px;
       border-collapse: collapse;
-      min-width: 720px;
     }
+
     th, td {
       padding: 12px 14px;
       border-bottom: 1px solid var(--line);
@@ -266,50 +469,121 @@
       font-size: 13px;
       white-space: nowrap;
     }
+
     th {
       color: var(--accent-strong);
-      background: rgba(255,255,255,0.035);
+      background: rgba(255, 255, 255, 0.035);
       font-weight: 800;
     }
+
+    td strong {
+      color: var(--ink);
+      font-weight: 800;
+    }
+
     tbody tr:last-child td {
       border-bottom: 0;
     }
-    .empty-row td {
-      height: 88px;
-      color: var(--muted);
-      text-align: center;
+
+    .warning-card {
+      display: grid;
+      gap: 5px;
+      border-color: rgba(248, 209, 127, 0.18);
     }
-    @media (max-width: 1180px) {
-      .metric-grid {
+
+    .warning-card strong {
+      color: var(--amber);
+    }
+
+    .week-strip {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .day-card {
+      min-height: 96px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      display: grid;
+      align-content: space-between;
+      gap: 10px;
+      background: rgba(255, 255, 255, 0.035);
+    }
+
+    .day-card.active {
+      border-color: rgba(110, 231, 210, 0.58);
+      background: rgba(110, 231, 210, 0.10);
+    }
+
+    .day-card span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .day-card strong {
+      font-size: 16px;
+    }
+
+    @media (max-width: 1240px) {
+      .metric-grid,
+      .coverage-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
-      .grid {
-        grid-template-columns: 1fr;
-      }
-    }
-    @media (max-width: 760px) {
-      .page {
-        padding: 16px;
-      }
-      .platform-header, .topbar {
-        align-items: stretch;
-        flex-direction: column;
-      }
-      .platform-actions {
-        align-items: stretch;
-        flex-direction: column;
-      }
-      .platform-link {
-        width: 100%;
-      }
-      .hero, .panel {
-        padding: 20px;
-      }
-      .metric-grid {
+
+      .layout {
         grid-template-columns: 1fr;
       }
     }
 
+    @media (max-width: 860px) {
+      .page {
+        padding: 16px;
+      }
+
+      .platform-header,
+      .platform-actions,
+      .hero-head,
+      .toolbar {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .platform-header,
+      .toolbar {
+        display: flex;
+      }
+
+      .hero-head {
+        display: grid;
+        grid-template-columns: 1fr;
+      }
+
+      .platform-link,
+      .ghost-button {
+        width: 100%;
+      }
+
+      .hero,
+      .panel {
+        padding: 20px;
+      }
+
+      .metric-grid,
+      .coverage-grid,
+      .week-strip {
+        grid-template-columns: 1fr;
+      }
+
+      .shift-card {
+        grid-template-columns: 1fr;
+      }
+
+      .time-block {
+        width: 100%;
+      }
+    }
   </style>
 </head>
 <body>
@@ -327,64 +601,169 @@
         </div>
       </div>
       <div class="platform-actions">
-        <span class="module-state">待接入排班数据</span>
+        <span class="module-state">页面框架已就绪</span>
         <a class="platform-link" href="../../index.html">返回主页</a>
       </div>
     </header>
 
     <section class="hero">
-      <div class="topbar">
+      <div class="hero-head">
         <div>
           <span class="eyebrow">Scheduling</span>
           <h1>排班管理</h1>
-          <p class="hero-copy">班次、出勤、工时与人员安排的排班看板入口。</p>
+          <p class="hero-copy">围绕班次、岗位覆盖、人员出勤和异常缺口组织排班信息。当前仅保留页面框架和字段结构，等待接入真实排班 Excel 或接口数据。</p>
         </div>
-        <span class="status-pill">暂无数据</span>
+        <span class="status-pill">待接入真实排班源</span>
       </div>
+
       <div class="metric-grid">
-        <article class="metric"><span>当日班次</span><strong>-</strong></article>
-        <article class="metric"><span>计划人数</span><strong>-</strong></article>
-        <article class="metric"><span>实际出勤</span><strong>-</strong></article>
-        <article class="metric"><span>缺勤人数</span><strong>-</strong></article>
-        <article class="metric"><span>加班工时</span><strong>-</strong></article>
-        <article class="metric"><span>调班记录</span><strong>-</strong></article>
+        <article class="metric"><span>今日排班人数</span><strong id="metric-planned">-</strong><small>待排班源同步</small></article>
+        <article class="metric"><span>预计在岗人数</span><strong id="metric-present">-</strong><small>待排班源同步</small></article>
+        <article class="metric"><span>请假 / 缺勤</span><strong id="metric-leave">-</strong><small>待排班源同步</small></article>
+        <article class="metric"><span>临时工人数</span><strong id="metric-temp">-</strong><small>待排班源同步</small></article>
+        <article class="metric"><span>岗位缺口</span><strong id="metric-gap">-</strong><small>待排班源同步</small></article>
+        <article class="metric"><span>延长班人数</span><strong id="metric-overtime">-</strong><small>待排班源同步</small></article>
       </div>
     </section>
 
     <main>
-      <section class="grid">
-        <section class="empty-card">
-          <span class="panel-label">No data</span>
-          <strong>排班总览</strong>
-          <p>按岗位、班次和人员沉淀排班状态。</p>
-        </section>
-        <section class="empty-card">
-          <span class="panel-label">No data</span>
-          <strong>出勤状态</strong>
-          <p>展示计划与实际出勤差异。</p>
-        </section>
-        <section class="empty-card">
-          <span class="panel-label">No data</span>
-          <strong>调班记录</strong>
-          <p>记录换班、请假和临时支援。</p>
-        </section>
+      <section class="toolbar">
+        <div class="tabs" aria-label="日期切换">
+          <button class="tab active" type="button">今日</button>
+          <button class="tab" type="button">本周</button>
+          <button class="tab" type="button">下周</button>
+        </div>
+        <a class="ghost-button" href="#details">查看人员明细</a>
       </section>
 
       <section class="panel">
         <div class="panel-head">
-          <div>
-            <span class="panel-label">Details</span>
-            <h2>明细记录</h2>
+          <div class="panel-title">
+            <span class="panel-label">Week</span>
+            <h2>本周排班日历</h2>
+            <p class="panel-note">接入真实排班源后，按日查看班次数、已排人数和异常提醒。</p>
           </div>
         </div>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>日期</th><th>班次</th><th>岗位</th><th>人员</th><th>状态</th><th>工时</th></tr></thead>
-            <tbody><tr class="empty-row"><td colspan="6">暂无数据</td></tr></tbody>
-          </table>
+        <div class="week-strip">
+          <article class="day-card"><span>周一</span><strong>-</strong><span>待同步</span></article>
+          <article class="day-card"><span>周二</span><strong>-</strong><span>待同步</span></article>
+          <article class="day-card"><span>周三</span><strong>-</strong><span>待同步</span></article>
+          <article class="day-card"><span>周四</span><strong>-</strong><span>待同步</span></article>
+          <article class="day-card active"><span>周五</span><strong>-</strong><span>待同步</span></article>
+          <article class="day-card"><span>周六</span><strong>-</strong><span>待同步</span></article>
+          <article class="day-card"><span>周日</span><strong>-</strong><span>待同步</span></article>
         </div>
+      </section>
+
+      <section class="layout">
+        <section class="panel">
+          <div class="panel-head">
+            <div class="panel-title">
+              <span class="panel-label">Coverage</span>
+              <h2>岗位覆盖</h2>
+              <p class="panel-note">计划人数、已排人数和缺口分开展示，接入真实数据后由排班源计算。</p>
+            </div>
+          </div>
+          <div class="coverage-grid">
+            <article class="coverage-card">
+              <header><strong>拆包</strong><span class="tag warn">待同步</span></header>
+              <div class="coverage-numbers"><span>计划<b>-</b></span><span>已排<b>-</b></span><span>缺口<b>-</b></span></div>
+            </article>
+            <article class="coverage-card">
+              <header><strong>上下架</strong><span class="tag warn">待同步</span></header>
+              <div class="coverage-numbers"><span>计划<b>-</b></span><span>已排<b>-</b></span><span>缺口<b>-</b></span></div>
+            </article>
+            <article class="coverage-card">
+              <header><strong>拣货</strong><span class="tag warn">待同步</span></header>
+              <div class="coverage-numbers"><span>计划<b>-</b></span><span>已排<b>-</b></span><span>缺口<b>-</b></span></div>
+            </article>
+            <article class="coverage-card">
+              <header><strong>发货</strong><span class="tag warn">待同步</span></header>
+              <div class="coverage-numbers"><span>计划<b>-</b></span><span>已排<b>-</b></span><span>缺口<b>-</b></span></div>
+            </article>
+            <article class="coverage-card">
+              <header><strong>移货</strong><span class="tag warn">待同步</span></header>
+              <div class="coverage-numbers"><span>计划<b>-</b></span><span>已排<b>-</b></span><span>缺口<b>-</b></span></div>
+            </article>
+            <article class="coverage-card">
+              <header><strong>品控</strong><span class="tag warn">待同步</span></header>
+              <div class="coverage-numbers"><span>计划<b>-</b></span><span>已排<b>-</b></span><span>缺口<b>-</b></span></div>
+            </article>
+          </div>
+        </section>
+
+        <aside class="panel">
+          <div class="panel-head">
+            <div class="panel-title">
+              <span class="panel-label">Shifts</span>
+              <h2>今日班次</h2>
+              <p class="panel-note">接入真实排班源后，按班次展示人力分布并下钻到人员明细。</p>
+            </div>
+          </div>
+          <div class="shift-list">
+            <article class="shift-card">
+              <div class="time-block">-</div>
+              <div class="shift-main"><h3>暂无班次数据</h3><span class="shift-meta">等待真实排班源同步</span></div>
+              <span class="tag warn">待同步</span>
+            </article>
+          </div>
+        </aside>
+      </section>
+
+      <section class="layout">
+        <section class="panel" id="details">
+          <div class="panel-head">
+            <div class="panel-title">
+              <span class="panel-label">Details</span>
+              <h2>人员排班明细</h2>
+              <p class="panel-note">字段限定为排班源中应能维护的基础信息：日期、姓名、岗位、班次、时间、人员类型、状态和备注。</p>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>日期</th>
+                  <th>姓名</th>
+                  <th>岗位</th>
+                  <th>班次</th>
+                  <th>开始</th>
+                  <th>结束</th>
+                  <th>人员类型</th>
+                  <th>状态</th>
+                  <th>备注</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td colspan="9">暂无真实排班数据</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <aside class="panel">
+          <div class="panel-head">
+            <div class="panel-title">
+              <span class="panel-label">Warnings</span>
+              <h2>异常提醒</h2>
+              <p class="panel-note">接入真实排班源后，由同步脚本自动生成可人工复核的排班风险。</p>
+            </div>
+          </div>
+          <div class="warning-list">
+            <article class="warning-card"><strong>暂无异常提醒</strong><span class="muted">等待真实排班源同步后生成。</span></article>
+          </div>
+        </aside>
       </section>
     </main>
   </div>
+
+  <script>
+    document.querySelectorAll(".tab").forEach((button) => {
+      button.addEventListener("click", () => {
+        document.querySelectorAll(".tab").forEach((item) => item.classList.remove("active"));
+        button.classList.add("active");
+      });
+    });
+  </script>
 </body>
 </html>

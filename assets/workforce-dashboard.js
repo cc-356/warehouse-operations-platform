@@ -6,7 +6,15 @@
   const historyByDate = new Map(history.map((item) => [item.date, item]));
   const totalPiecesMax = Math.max(...history.map((run) => (run.groups || []).reduce((sum, group) => sum + Number(group.totalPieces || 0), 0)), 1);
   const groupYMaxCache = new Map();
-  const fixedGroupOrder = ["拆包", "上下架", "拣货", "发货", "移货"];
+  const fixedGroupOrder = ["拆包", "上下架", "拣货", "发货", "移货", "质检", "返修", "大烫", "包装"];
+  const qualityDimensionFields = [
+    ["大货", "大货质检量"],
+    ["销退", "消退质检"],
+    ["大货返修", "大货返修质检"],
+    ["唯品会", "唯品会质检"],
+    ["返修", "返修质检"],
+    ["异常件", "异常件质检"]
+  ];
   const anomalyExcludedWorkers = new Set(["冯建豪", "肖林", "曹远清", "王子民", "杨金玲"]);
   const efficiencyExcludedWorkers = new Set(["杨金玲", "刘志文", "肖林", "冯建豪"]);
   let groupCardTimer = null;
@@ -17,10 +25,51 @@
     calendarYear: Number(String(payload.selectedDate || "").split("-")[0]) || new Date().getFullYear(),
     calendarMonth: Number(String(payload.selectedDate || "").split("-")[1]) || (new Date().getMonth() + 1),
     renderToken: 0,
-    pendingScrollGroup: ""
+    pendingScrollGroup: "",
+    preserveScrollY: null
   };
 
   const statusTextMap = { ok: "已完成", partial: "部分完成", blocked: "需人工处理" };
+
+  if ("scrollRestoration" in window.history) {
+    window.history.scrollRestoration = "manual";
+  }
+
+  function scrollToTopOnInitialLoad() {
+    const goTop = () => window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    goTop();
+    window.requestAnimationFrame(goTop);
+    window.setTimeout(goTop, 80);
+    window.setTimeout(goTop, 320);
+  }
+
+  function rememberScrollPosition() {
+    state.preserveScrollY = window.scrollY || document.documentElement.scrollTop || 0;
+  }
+
+  function restoreRememberedScroll(token) {
+    if (state.preserveScrollY === null || state.pendingScrollGroup) return;
+    const y = state.preserveScrollY;
+    const restore = () => {
+      if (token === state.renderToken) window.scrollTo({ top: y, left: 0, behavior: "auto" });
+    };
+    restore();
+    window.requestAnimationFrame(restore);
+    window.setTimeout(restore, 80);
+    window.setTimeout(() => {
+      restore();
+      if (token === state.renderToken) state.preserveScrollY = null;
+    }, 260);
+  }
+
+  function isEfficiencyExcludedWorker(worker) {
+    const name = String(worker || "").replace(/\s+/g, "").replace(/　/g, "");
+    return efficiencyExcludedWorkers.has(name) || name.startsWith("临时工");
+  }
+
+  function groupHasOrders(group) {
+    return Boolean(group) && group.totalOrders !== null && group.totalOrders !== undefined && group.totalOrders !== "";
+  }
 
   function escapeHtml(value) {
     return String(value ?? "")
@@ -34,6 +83,106 @@
   function formatNumber(value) {
     if (value === null || value === undefined || value === "") return "-";
     return Number(value).toLocaleString("zh-CN");
+  }
+
+  function groupUnit(group) {
+    return group && group.sourceUnit ? group.sourceUnit : "件";
+  }
+
+  function sumRowDetail(rows, fieldName) {
+    return (rows || []).reduce((sum, row) => sum + Number((row.details && row.details[fieldName]) || 0), 0);
+  }
+
+  function qualityInspectionBreakdown(groups) {
+    const inspectionGroups = (groups || []).filter((group) => group.name === "质检" || group.name === "大货质检" || group.name === "销退质检");
+    const dimensions = qualityDimensionFields.map(([label, field]) => ({
+      label,
+      field,
+      value: inspectionGroups.reduce((sum, group) => sum + sumRowDetail(group.rows, field), 0)
+    }));
+    return {
+      dimensions,
+      largeGoods: dimensions.find((item) => item.field === "大货质检量")?.value || 0,
+      returnGoods: dimensions.find((item) => item.field === "消退质检")?.value || 0
+    };
+  }
+
+  function renderQualityInspectionBreakdown(group, breakdown) {
+    if (!group || (group.name !== "质检" && group.name !== "大货质检" && group.name !== "销退质检")) return "";
+    const dimensions = (breakdown && breakdown.dimensions) || [];
+    if (!dimensions.some((item) => Number(item.value || 0) > 0)) return "";
+    return '<div class="quality-breakdown" aria-label="质检产量拆分">' +
+      dimensions.map((item) =>
+        '<span>' + escapeHtml(item.label) + '数量 <strong>' + formatNumber(item.value) + '</strong> 件</span>'
+      ).join("") +
+    '</div>';
+  }
+
+  function renderWorkerMeta(row, group) {
+    if (group && group.name === "质检") {
+      const chips = qualityDimensionFields
+        .map(([label, field]) => ({ label, value: Number((row.details && row.details[field]) || 0) }))
+        .filter((item) => item.value > 0)
+        .map((item) => '<em>' + escapeHtml(item.label) + '质检数 <strong>' + formatNumber(item.value) + '</strong></em>')
+        .join("");
+      return '<span class="sub">原岗位：' + escapeHtml(row.role || "-") + '</span>' +
+        '<span class="sub">品牌：' + escapeHtml(row.brand || "未提供") + '</span>' +
+        (chips ? '<span class="quality-row-breakdown">' + chips + '</span>' : "");
+    }
+    return '<span class="sub">原岗位：' + escapeHtml(row.role) + '</span>';
+  }
+
+  function renderGroupMetrics(group, deltaPieces, deltaOrders, inspectionBreakdown) {
+    if (group && group.name === "质检") {
+      const dimensionRows = ((inspectionBreakdown && inspectionBreakdown.dimensions) || qualityDimensionFields.map(([label]) => ({ label, value: 0 })))
+        .map((item) => '<em>' + escapeHtml(item.label) + ' <span>' + formatNumber(item.value) + ' 件</span></em>')
+        .join("");
+      return '<div class="group-metrics quality-metrics">' +
+        '<div><span>总件数</span><strong>' + formatNumber(group.totalPieces) + ' ' + escapeHtml(groupUnit(group)) + '</strong></div>' +
+        '<div class="quality-metric-split"><span>质检拆分</span><strong>' + dimensionRows + '</strong></div>' +
+        '<div><span>效率</span><strong class="metric-efficiency">' + formatEfficiencyMetric(group.efficiency) + '</strong></div>' +
+        '<div><span>件数对比上次</span><strong>' + formatDelta(deltaPieces) + '</strong></div>' +
+      '</div>';
+    }
+    if (!groupHasOrders(group)) {
+      return '<div class="group-metrics no-orders-metrics">' +
+        '<div><span>' + (groupUnit(group) === "件" ? "总件数" : "总工作量") + '</span><strong>' + formatNumber(group.totalPieces) + ' ' + escapeHtml(groupUnit(group)) + '</strong></div>' +
+        '<div><span>效率</span><strong class="metric-efficiency">' + formatEfficiencyMetric(group.efficiency) + '</strong></div>' +
+        '<div><span>件数对比上次</span><strong>' + formatDelta(deltaPieces) + '</strong></div>' +
+      '</div>';
+    }
+    return '<div class="group-metrics">' +
+      '<div><span>' + (groupUnit(group) === "件" ? "总件数" : "总工作量") + '</span><strong>' + formatNumber(group.totalPieces) + ' ' + escapeHtml(groupUnit(group)) + '</strong></div>' +
+      '<div><span>单数</span><strong>' + formatNumber(group.totalOrders) + '</strong></div>' +
+      '<div><span>效率</span><strong class="metric-efficiency">' + formatEfficiencyMetric(group.efficiency) + '</strong></div>' +
+      '<div><span>件数对比上次</span><strong>' + formatDelta(deltaPieces) + '</strong></div>' +
+      '<div><span>单数对比上次</span><strong>' + formatDelta(deltaOrders) + '</strong></div>' +
+    '</div>';
+  }
+
+  function renderGroupRow(row, group) {
+    if (!groupHasOrders(group)) {
+      return '<tr>' +
+        '<td class="rank">' + (row.rank ?? "-") + '</td>' +
+        '<td><strong>' + escapeHtml(row.worker) + '</strong>' + renderWorkerMeta(row, group) + '</td>' +
+        '<td>' + formatNumber(row.pieces) + '</td>' +
+        '<td>' + formatEfficiency(row.efficiency) + '</td>' +
+      '</tr>';
+    }
+    return '<tr>' +
+      '<td class="rank">' + (row.rank ?? "-") + '</td>' +
+      '<td><strong>' + escapeHtml(row.worker) + '</strong>' + renderWorkerMeta(row, group) + '</td>' +
+      '<td>' + formatNumber(row.pieces) + '</td>' +
+      '<td>' + formatNumber(row.orders) + '</td>' +
+      '<td>' + formatEfficiency(row.efficiency) + '</td>' +
+    '</tr>';
+  }
+
+  function renderGroupTable(group, rows) {
+    const head = !groupHasOrders(group)
+      ? '<thead><tr><th>排名</th><th>员工 / 原岗位</th><th>总件数</th><th>效率</th></tr></thead>'
+      : '<thead><tr><th>排名</th><th>员工 / 原岗位</th><th>总件数</th><th>单数</th><th>效率</th></tr></thead>';
+    return '<div class="table-wrap"><table>' + head + '<tbody>' + rows + '</tbody></table></div>';
   }
 
   function formatAverageNumber(value) {
@@ -197,8 +346,10 @@
         return true;
       });
       const totalPieces = rows.reduce((sum, row) => sum + Number(row.pieces || 0), 0);
-      const totalOrders = rows.reduce((sum, row) => sum + Number(row.orders || 0), 0);
-      const efficiencyRows = rows.filter((row) => Number(row.pieces || 0) > 0 && !efficiencyExcludedWorkers.has(row.worker || ""));
+      const totalOrders = groupHasOrders(group)
+        ? rows.reduce((sum, row) => sum + Number(row.orders || 0), 0)
+        : null;
+      const efficiencyRows = rows.filter((row) => Number(row.pieces || 0) > 0 && !isEfficiencyExcludedWorker(row.worker));
       const efficiencyComplete = efficiencyRows.every((row) => row.workHours !== null && row.workHours !== undefined && row.workHours !== "");
       const efficiencyPieces = efficiencyRows.reduce((sum, row) => sum + Number(row.pieces || 0), 0);
       const efficiencyHours = efficiencyRows.reduce((sum, row) => sum + Number(row.workHours || 0), 0);
@@ -236,7 +387,7 @@
   }
 
   function TechPanel(title, kicker, body, extraClass) {
-    return '<section class="tech-panel ' + (extraClass || "") + '">' +
+    return '<section class="tech-panel ' + (extraClass || "").trim() + '">' +
       '<div class="panel-head"><h2 class="panel-title">' + escapeHtml(title) + '</h2><span class="panel-kicker">' + escapeHtml(kicker) + '</span></div>' +
       body +
     '</section>';
@@ -274,26 +425,26 @@
         DashboardHeader(logoSrc, homeHref) +
         '<main class="dashboard-grid">' +
           '<aside class="dashboard-column left-column">' +
-            TechPanel("工种分布", "WORK TYPE", '<div id="group-donut"></div>') +
-            TechPanel("工作量结构", "VOLUME", '<div id="workload-bars"></div>') +
-            TechPanel("各工种人效对比", "EFFICIENCY", '<div id="efficiency-chart"></div>') +
-            TechPanel("工作量趋势", "7 DAYS", '<div id="total-trend"></div>') +
+            TechPanel("工种分布", "WORK TYPE", '<div id="group-donut"></div>', "analysis-panel tone-cyan") +
+            TechPanel("工作量结构", "VOLUME", '<div id="workload-bars"></div>', "analysis-panel tone-blue") +
+            TechPanel("各工种人效对比", "EFFICIENCY", '<div id="efficiency-chart"></div>', "analysis-panel tone-green") +
+            TechPanel("工作量趋势", "7 DAYS", '<div id="total-trend"></div>', "analysis-panel tone-amber") +
           '</aside>' +
           '<section class="dashboard-column center-column">' +
-            '<section class="metric-grid" id="metric-grid"></section>' +
-            TechPanel("员工人效总览", "COMMAND CENTER", '<div class="command-center"><div id="completion-ring" class="focus-orbit"></div><div id="summary-grid" class="summary-grid"></div></div>', "command-center-panel") +
-            TechPanel("异常提醒", "ALERT", '<div class="panel-head"><span id="status-pill" class="status-pill">加载中</span></div><div id="notes"></div>') +
+            '<section class="dashboard-section overview-section"><div class="section-label"><span>核心总览</span><em>OVERVIEW</em></div><div class="metric-grid" id="metric-grid"></div></section>' +
+            TechPanel("员工人效总览", "COMMAND CENTER", '<div class="command-center"><div id="completion-ring" class="focus-orbit"></div><div id="summary-grid" class="summary-grid"></div></div>', "command-center-panel tone-cyan") +
+            TechPanel("异常提醒", "ALERT", '<div class="panel-head"><span id="status-pill" class="status-pill">加载中</span></div><div id="notes"></div>', "alert-panel tone-amber") +
           '</section>' +
           '<aside class="dashboard-column right-column">' +
-            TechPanel("考勤覆盖", "ATTENDANCE", '<div id="attendance-panel"></div>') +
-            TechPanel("岗位效率", "ROLE", '<div id="role-efficiency"></div>') +
-            TechPanel("员工工作量排名", "TOP STAFF", '<div id="employee-ranking" class="ranking-list"></div>') +
-            TechPanel("人工复核", "REVIEW", '<div id="manual-grid" class="review-grid"></div>') +
+            TechPanel("考勤覆盖", "ATTENDANCE", '<div id="attendance-panel"></div>', "support-panel tone-green") +
+            TechPanel("岗位效率", "ROLE", '<div id="role-efficiency"></div>', "support-panel tone-blue") +
+            TechPanel("员工工作量排名", "TOP STAFF", '<div id="employee-ranking" class="ranking-list"></div>', "support-panel tone-cyan") +
+            TechPanel("人工复核", "REVIEW", '<div id="manual-grid" class="review-grid"></div>', "support-panel tone-rose") +
           '</aside>' +
         '</main>' +
-        '<section id="group-grid" class="group-grid"></section>' +
-        '<section id="auxiliary-panel" class="tech-panel auxiliary-panel"></section>' +
-        '<section id="run-notes-panel" class="tech-panel run-notes-panel"></section>' +
+        '<section class="dashboard-section worktype-section"><div class="section-label"><span>工种明细与排名</span><em>WORKTYPE DETAIL</em></div><div id="group-grid" class="group-grid"></div></section>' +
+        '<section id="auxiliary-panel" class="tech-panel auxiliary-panel tone-amber"></section>' +
+        '<section id="run-notes-panel" class="tech-panel run-notes-panel tone-blue"></section>' +
         '<div id="date-float" class="date-float"><button id="date-panel-toggle" class="date-float-toggle" type="button" aria-label="打开日期导航" aria-expanded="false">日期</button><section class="date-float-panel tech-panel"><div class="panel-head"><h2 class="panel-title">日期导航</h2><span class="panel-kicker">DATE</span></div><div id="date-list" class="date-list"></div></section></div>' +
         '<div id="group-float" class="group-float"><button id="group-panel-toggle" class="group-float-toggle" type="button" aria-label="打开岗位导航" aria-expanded="false">岗位</button><section class="group-float-panel tech-panel"><div class="panel-head"><h2 class="panel-title">岗位导航</h2><span class="panel-kicker">POSITION</span></div><div id="group-nav" class="floating-nav"></div></section></div>' +
       '</div>' +
@@ -305,7 +456,7 @@
   function DashboardFilters(run) {
     const rows = getAllRows(run);
     setSelectOptions(document.getElementById("filter-date"), history.map((item) => ({ value: item.date, label: item.date })), state.selectedDate);
-    setSelectOptions(document.getElementById("filter-group"), [{ value: "all", label: "全部工种" }].concat((run.groups || []).map((group) => ({ value: group.name, label: group.name }))), state.group);
+    setSelectOptions(document.getElementById("filter-group"), [{ value: "all", label: "全部工种" }].concat([...(run.groups || [])].sort(compareGroups).map((group) => ({ value: group.name, label: group.name }))), state.group);
     setSelectOptions(document.getElementById("filter-worker"), [{ value: "all", label: "全部员工" }].concat([...new Set(rows.map((row) => row.worker).filter(Boolean))].sort().map((worker) => ({ value: worker, label: worker }))), state.worker);
   }
 
@@ -411,7 +562,7 @@
     container.innerHTML = groups.length ? groups.map((group) => {
       return '<button class="float-nav-item" type="button" data-group="' + escapeHtml(group.name) + '">' +
         '<span>' + escapeHtml(group.name) + '</span>' +
-        '<strong><span class="nav-number">' + formatNumber(group.totalPieces) + '</span><span class="nav-unit">件</span></strong>' +
+        '<strong><span class="nav-number">' + formatNumber(group.totalPieces) + '</span><span class="nav-unit">' + escapeHtml(groupUnit(group)) + '</span></strong>' +
         '<em>' + (group.rowCount ?? ((group.rows || []).length)) + ' 人</em>' +
       '</button>';
     }).join("") : '<p class="empty-note">当前日期暂无岗位数据。</p>';
@@ -765,32 +916,19 @@
 
   function GroupCards(run, previousRun, groups) {
     const previousMap = new Map(((previousRun && previousRun.groups) || []).map((group) => [group.name, group]));
+    const inspectionBreakdown = qualityInspectionBreakdown((run && run.groups) || groups);
     document.getElementById("group-grid").innerHTML = groups.length ? groups.map((group) => {
       const previous = previousMap.get(group.name);
       const deltaPieces = previous ? Number(group.totalPieces || 0) - Number(previous.totalPieces || 0) : null;
       const deltaOrders = previous ? Number(group.totalOrders || 0) - Number(previous.totalOrders || 0) : null;
-      const rows = (group.rows || []).map((row) =>
-        '<tr>' +
-          '<td class="rank">' + (row.rank ?? "-") + '</td>' +
-          '<td><strong>' + escapeHtml(row.worker) + '</strong><span class="sub">' + escapeHtml(row.role) + '</span></td>' +
-          '<td>' + formatNumber(row.pieces) + '</td>' +
-          '<td>' + formatNumber(row.orders) + '</td>' +
-          '<td>' + formatEfficiency(row.efficiency) + '</td>' +
-        '</tr>'
-      ).join("");
+      const rows = (group.rows || []).map((row) => renderGroupRow(row, group)).join("");
       return '<section class="group-card" id="' + escapeHtml(groupDomId(group.name)) + '">' +
         '<div class="group-header">' +
           '<div><h2>' + escapeHtml(group.name) + '</h2><p>纳入人数 ' + (group.rowCount ?? 0) + ' 人' + (group.auxiliaryCount ? ' · 辅助/顺手 ' + group.auxiliaryCount + ' 条' : '') + '</p></div>' +
-          '<div class="group-metrics">' +
-            '<div><span>总件数</span><strong>' + formatNumber(group.totalPieces) + '</strong></div>' +
-            '<div><span>单数</span><strong>' + formatNumber(group.totalOrders) + '</strong></div>' +
-            '<div><span>效率</span><strong class="metric-efficiency">' + formatEfficiencyMetric(group.efficiency) + '</strong></div>' +
-            '<div><span>件数对比上次</span><strong>' + formatDelta(deltaPieces) + '</strong></div>' +
-            '<div><span>单数对比上次</span><strong>' + formatDelta(deltaOrders) + '</strong></div>' +
-          '</div>' +
+          renderGroupMetrics(group, deltaPieces, deltaOrders, inspectionBreakdown) +
         '</div>' +
         '<div class="group-body">' +
-          '<div class="table-wrap"><table><thead><tr><th>排名</th><th>员工 / 岗位</th><th>总件数</th><th>单数</th><th>效率</th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
+          renderGroupTable(group, rows) +
           GroupTrend(group.name) +
         '</div>' +
       '</section>';
@@ -827,7 +965,17 @@
   function scheduleGroupCards(run, previousRun, groups, token) {
     const container = document.getElementById("group-grid");
     if (!container) return;
+    const previousHeight = container.getBoundingClientRect().height;
+    const previousContent = container.innerHTML;
+    const hasRenderedGroupCards = container.children.length > 0;
+    if (previousHeight > 0) {
+      container.style.minHeight = Math.ceil(previousHeight) + "px";
+    }
+    container.setAttribute("aria-busy", "true");
     container.innerHTML = '<section class="tech-panel"><p class="empty-note">正在加载工种明细...</p></section>';
+    if (hasRenderedGroupCards) {
+      container.innerHTML = previousContent;
+    }
     if (groupCardTimer) {
       if (window.cancelIdleCallback) window.cancelIdleCallback(groupCardTimer);
       else clearTimeout(groupCardTimer);
@@ -836,6 +984,10 @@
       if (token !== state.renderToken) return;
       GroupCards(run, previousRun, groups);
       AuxiliaryActions(groups);
+      container.setAttribute("aria-busy", "false");
+      window.requestAnimationFrame(() => {
+        if (token === state.renderToken) container.style.minHeight = "";
+      });
       if (state.pendingScrollGroup) {
         const target = document.getElementById(groupDomId(state.pendingScrollGroup));
         state.pendingScrollGroup = "";
@@ -896,4 +1048,5 @@
   buildShell();
   bindFilters();
   render();
+  scrollToTopOnInitialLoad();
 })();

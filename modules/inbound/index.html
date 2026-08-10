@@ -29,8 +29,8 @@
       --shadow: var(--module-shadow);
       --radius: 18px;
       --radius-inner: 14px;
-      --module-gap: 34px;
-      --module-padding: 28px;
+      --module-gap: 22px;
+      --module-padding: 20px;
     }
     * { box-sizing: border-box; }
     html { scroll-behavior: smooth; }
@@ -428,9 +428,9 @@
       display: flex;
       align-items: flex-start;
       justify-content: space-between;
-      gap: 16px;
-      margin-bottom: 20px;
-      padding-bottom: 14px;
+      gap: 12px;
+      margin-bottom: 14px;
+      padding-bottom: 10px;
       border-bottom: 1px solid rgba(210,235,225,.18);
     }
     .panel-head > div { min-width: 0; display: grid; gap: 4px; }
@@ -442,38 +442,38 @@
       border-color: rgba(110, 231, 210, 0.26);
       box-shadow: var(--module-shadow);
     }
-    .brand-overview { display: grid; grid-template-columns: minmax(320px, 420px) minmax(0, 1fr); gap: 24px; align-items: stretch; min-height: 390px; }
+    .brand-overview { display: grid; grid-template-columns: minmax(240px, 320px) minmax(0, 1fr); gap: 12px; align-items: stretch; min-height: 214px; }
     .donut-card {
-      min-height: 390px;
-      padding: 20px;
+      min-height: 214px;
+      padding: 11px 12px;
       border: 1px solid var(--module-border-soft);
       border-radius: var(--radius-inner);
       background:
         linear-gradient(180deg, rgba(255,255,255,.065), rgba(255,255,255,.020)),
         var(--surface-inner);
       display: grid;
-      gap: 12px;
+      gap: 6px;
       align-content: center;
       box-shadow: inset 0 1px 0 rgba(255,255,255,.055), var(--module-shadow-soft);
     }
-    .donut-chart { min-height: 330px; display: grid; grid-template-rows: minmax(210px, auto) 1fr; justify-items: center; align-items: center; gap: 12px; }
-    .donut-chart.no-legend { min-height: 230px; grid-template-rows: 1fr; }
-    .donut-chart svg { width: min(100%, 210px); aspect-ratio: 1; display: block; }
+    .donut-chart { min-height: 190px; display: grid; grid-template-rows: minmax(128px, auto) 1fr; justify-items: center; align-items: center; gap: 5px; }
+    .donut-chart.no-legend { min-height: 150px; grid-template-rows: 1fr; }
+    .donut-chart svg { width: min(100%, 132px); aspect-ratio: 1; display: block; }
     .donut-center { fill: var(--ink); font-size: 18px; font-weight: 800; text-anchor: middle; }
     .donut-sub { fill: var(--muted); font-size: 10px; text-anchor: middle; }
-    .donut-legend { width: 100%; display: grid; gap: 9px; min-width: 0; }
-    .legend-row { display: grid; grid-template-columns: 10px minmax(58px, 1fr) auto; align-items: center; gap: 8px; color: var(--muted); font-size: 12px; }
+    .donut-legend { width: 100%; display: grid; gap: 5px; min-width: 0; }
+    .legend-row { display: grid; grid-template-columns: 9px minmax(58px, 1fr) auto; align-items: center; gap: 7px; color: var(--muted); font-size: 11px; }
     .legend-row.is-empty { opacity: .42; }
     .legend-row span:nth-child(2) { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .legend-dot { width: 10px; height: 10px; border-radius: 999px; }
-    .legend-row strong { color: var(--ink); font-size: 13px; white-space: nowrap; }
-    .brand-grid { min-height: 390px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+    .legend-dot { width: 9px; height: 9px; border-radius: 999px; }
+    .legend-row strong { color: var(--ink); font-size: 12px; white-space: nowrap; }
+    .brand-grid { min-height: 214px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
     .brand-card {
       --brand-color: var(--accent);
       position: relative;
       min-width: 0;
       min-height: 0;
-      padding: 24px 24px 22px;
+      padding: 13px 14px 12px;
       border-radius: 16px;
       overflow: hidden;
       background:
@@ -487,7 +487,7 @@
       box-shadow:
         inset 0 1px 0 rgba(255,255,255,.05),
         inset 0 0 0 1px color-mix(in srgb, var(--brand-color) 7%, transparent),
-        0 18px 46px rgba(0,0,0,.24);
+        0 14px 34px rgba(0,0,0,.22);
       transition: border-color 160ms ease, transform 160ms ease, opacity 160ms ease, box-shadow 160ms ease;
     }
     .brand-card::before {
@@ -519,14 +519,14 @@
     .brand-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
     .brand-top h3 { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .brand-dot { width: 10px; height: 10px; border-radius: 999px; display: inline-flex; margin-right: 8px; }
-    .brand-metrics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 14px; margin-top: 18px; }
-    .brand-metrics span { display: block; color: var(--muted); font-size: 12px; white-space: nowrap; }
-    .brand-metrics strong { display: block; margin-top: 4px; color: var(--ink); font-size: 23px; line-height: 1.05; white-space: nowrap; }
-    .two-col { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(380px, .85fr); gap: 26px; align-items: stretch; }
-    .three-col { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 26px; align-items: stretch; }
+    .brand-metrics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px 11px; margin-top: 12px; }
+    .brand-metrics span { display: block; color: var(--muted); font-size: 11px; white-space: nowrap; }
+    .brand-metrics strong { display: block; margin-top: 2px; color: var(--ink); font-size: 20px; line-height: 1.05; white-space: nowrap; }
+    .two-col { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(340px, .85fr); gap: 18px; align-items: stretch; }
+    .three-col { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; align-items: stretch; }
     .chart {
-      min-height: 260px;
-      padding: 18px;
+      min-height: 220px;
+      padding: 12px;
       border: 1px solid rgba(210,235,225,.18);
       border-radius: var(--radius-inner);
       background:
@@ -535,26 +535,30 @@
       box-shadow: inset 0 1px 0 rgba(255,255,255,.05), 0 10px 28px rgba(0,0,0,.16);
     }
     .weekly-chart {
-      min-height: 340px;
+      min-height: 0;
+      padding: 8px 10px 9px;
     }
     .weekly-chart svg {
       width: 100%;
-      height: 300px;
+      height: 224px;
       display: block;
     }
+    .weekly-label-bg { fill: rgba(4, 12, 14, .84); stroke: rgba(210,235,225,.20); stroke-width: 1; }
+    .weekly-qty-text { fill: #dffff8; font-size: 11px; font-weight: 900; text-anchor: middle; }
+    .weekly-order-text { fill: #ffe1d6; font-size: 10px; font-weight: 900; text-anchor: middle; }
     .weekly-legend {
       display: flex;
       flex-wrap: wrap;
       align-items: center;
-      gap: 12px 18px;
-      margin-top: 10px;
+      gap: 6px 12px;
+      margin-top: 2px;
       color: var(--muted);
-      font-size: 12px;
+      font-size: 11px;
     }
     .weekly-legend span {
       display: inline-flex;
       align-items: center;
-      gap: 7px;
+      gap: 6px;
       white-space: nowrap;
     }
     .legend-line {
@@ -563,25 +567,30 @@
       border-radius: 999px;
       background: var(--warn);
     }
-    .business-visual { display: grid; grid-template-columns: minmax(280px, .78fr) minmax(0, 1fr); gap: 20px; align-items: center; }
-    .business-visual .donut-card { min-height: 260px; }
-    .business-visual .bars { min-width: 0; padding: 14px; }
+    .business-visual { display: grid; grid-template-columns: minmax(220px, .72fr) minmax(0, 1fr); gap: 12px; align-items: center; }
+    .business-visual .donut-card { min-height: 214px; }
+    .business-visual .bars { min-width: 0; padding: 12px; }
+    .three-col .business-visual { grid-template-columns: 1fr; align-items: stretch; }
+    .three-col .business-visual .donut-card { min-height: 150px; padding: 8px; }
+    .three-col .business-visual .donut-chart { min-height: 132px; }
+    .three-col .business-visual .donut-chart svg { width: min(100%, 112px); }
+    .three-col .business-visual .bars { padding: 10px; }
     .business-visual .bar-row {
       grid-template-columns: minmax(0, 1fr) auto;
       grid-template-areas:
         "label value"
         "track track";
-      gap: 7px 8px;
+      gap: 5px 7px;
     }
     .business-visual .bar-row > span { grid-area: label; }
     .business-visual .bar-row .bar-track { grid-area: track; width: 100%; }
     .business-visual .bar-row strong { grid-area: value; }
-    .business-visual .bar-row strong { font-size: 17px; }
+    .business-visual .bar-row strong { font-size: 15px; }
     .business-visual .bar-row strong small { font-size: 11px; }
     .bars {
       display: grid;
-      gap: 12px;
-      padding: 18px;
+      gap: 9px;
+      padding: 12px;
       border: 1px solid rgba(210,235,225,.18);
       border-radius: var(--radius-inner);
       background:
@@ -589,13 +598,43 @@
         rgba(5, 10, 12, .62);
       box-shadow: inset 0 1px 0 rgba(255,255,255,.05), 0 10px 28px rgba(0,0,0,.16);
     }
-    .bar-row { display: grid; grid-template-columns: minmax(64px, 96px) minmax(0, 1fr) minmax(112px, auto); align-items: center; gap: 10px; color: var(--muted); font-size: 13px; }
+    .bar-row { display: grid; grid-template-columns: minmax(60px, 90px) minmax(0, 1fr) minmax(96px, auto); align-items: center; gap: 8px; color: var(--muted); font-size: 12px; }
     .bar-row { min-width: 0; }
     .bar-row > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .bar-row strong { min-width: 0; color: var(--ink); text-align: right; white-space: nowrap; font-size: 18px; line-height: 1.1; }
-    .bar-row strong small { color: var(--muted); font-size: 12px; font-weight: 800; }
-    .bar-track { height: 12px; border-radius: 999px; overflow: hidden; background: rgba(255,255,255,.055); }
+    .bar-row strong { min-width: 0; color: var(--ink); text-align: right; white-space: nowrap; font-size: 15px; line-height: 1.1; }
+    .bar-row strong small { color: var(--muted); font-size: 11px; font-weight: 800; }
+    .bar-track { height: 9px; border-radius: 999px; overflow: hidden; background: rgba(255,255,255,.055); }
     .bar-fill { height: 100%; border-radius: inherit; background: var(--accent); }
+    .insight-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; }
+    .insight-card {
+      min-width: 0;
+      padding: 11px;
+      border: 1px solid rgba(210,235,225,.18);
+      border-radius: var(--radius-inner);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.060), rgba(255,255,255,.018)),
+        rgba(5, 10, 12, .62);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.05), 0 10px 28px rgba(0,0,0,.16);
+    }
+    .insight-card span { display: block; color: var(--muted); font-size: 12px; line-height: 1.35; }
+    .insight-card strong { display: block; margin-top: 5px; color: var(--ink); font-size: 21px; line-height: 1.05; white-space: nowrap; }
+    .insight-card small { display: block; margin-top: 5px; color: var(--muted); font-size: 11px; line-height: 1.35; }
+    .style-list { display: grid; gap: 7px; }
+    .style-row {
+      display: grid;
+      grid-template-columns: minmax(120px, 1fr) minmax(120px, 1.2fr) minmax(92px, auto);
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      border: 1px solid rgba(210,235,225,.16);
+      border-radius: var(--radius-inner);
+      background: rgba(255,255,255,.035);
+      color: var(--muted);
+    }
+    .style-row > button { min-width: 0; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .style-meta { min-width: 0; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+    .style-row strong { color: var(--ink); text-align: right; white-space: nowrap; }
+    .coverage-table table { min-width: 980px; }
     .matrix {
       overflow: auto;
       border: 1px solid rgba(210,235,225,.18);
@@ -640,7 +679,7 @@
       box-shadow: inset 0 1px 0 rgba(255,255,255,.05), var(--module-shadow-soft);
     }
     table { width: 100%; border-collapse: separate; border-spacing: 0; min-width: 900px; }
-    th, td { padding: 12px 14px; border-bottom: 1px solid var(--module-border-soft); color: var(--muted); text-align: left; font-size: 13px; white-space: nowrap; }
+    th, td { padding: 9px 11px; border-bottom: 1px solid var(--module-border-soft); color: var(--muted); text-align: left; font-size: 12px; white-space: nowrap; }
     th { color: var(--accent-strong); background: rgba(25, 40, 43, .98); font-weight: 800; position: sticky; top: 0; z-index: 1; box-shadow: inset 0 -1px 0 rgba(210,235,225,.16); }
     tbody tr:nth-child(odd) td { background: rgba(255,255,255,.018); }
     tbody tr:nth-child(even) td { background: rgba(255,255,255,.038); }
@@ -651,18 +690,9 @@
     tbody tr:hover td:first-child { background: rgba(20, 38, 39, .98); }
     tbody tr:last-child td { border-bottom: 0; }
     .link-cell { color: var(--accent-strong); background: none; border: 0; padding: 0; font-weight: 800; }
-    .empty-row td { height: 92px; text-align: center; color: var(--muted); }
-    .pager { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--module-border-soft); color: var(--muted); font-size: 13px; }
-    #qualitySummary {
-      padding: 8px 14px;
-      border: 1px solid rgba(210,235,225,.18);
-      border-radius: var(--radius-inner);
-      background:
-        linear-gradient(180deg, rgba(255,255,255,.060), rgba(255,255,255,.018)),
-        rgba(5, 10, 12, .62);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,.05);
-    }
-    .quality-line { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 10px; padding: 11px 0; border-bottom: 1px solid var(--module-border-soft); color: var(--muted); }
+    .empty-row td { height: 72px; text-align: center; color: var(--muted); }
+    .pager { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--module-border-soft); color: var(--muted); font-size: 12px; }
+    .quality-line { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--module-border-soft); color: var(--muted); font-size: 12px; }
     .quality-line:last-child { border-bottom: 0; }
     .drawer-backdrop { position: fixed; inset: 0; display: none; background: rgba(0,0,0,.44); z-index: 20; }
     .drawer-backdrop.open { display: block; }
@@ -673,7 +703,7 @@
     .drawer-item { padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: rgba(255,255,255,.035); color: var(--muted); }
     .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
     @media (max-width: 1180px) {
-      main { gap: 30px; }
+      main { gap: 20px; }
       .two-col, .three-col, .brand-overview, .business-visual { grid-template-columns: 1fr; }
       .global-filter-grid {
         grid-template-columns: 180px minmax(220px, 1fr) minmax(150px, .7fr) minmax(150px, .75fr);
@@ -692,7 +722,7 @@
       }
     }
     @media (max-width: 760px) {
-      :root { --module-padding: 18px; --module-gap: 24px; }
+      :root { --module-padding: 16px; --module-gap: 18px; }
       .page { padding: 16px; }
       .platform-header { align-items: flex-start; flex-direction: column; }
       .platform-actions { align-items: center; flex-direction: row; flex-wrap: wrap; }
@@ -702,6 +732,9 @@
       .hero-head { display: none; }
       .hero-copy { display: none; }
       h1 { font-size: 30px; }
+      .insight-grid { grid-template-columns: 1fr; }
+      .style-row { grid-template-columns: 1fr; align-items: start; }
+      .style-row strong { text-align: left; }
       .brand-grid { grid-template-columns: 1fr; }
       .donut-chart { grid-template-columns: 1fr; }
       .brand-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -846,14 +879,13 @@
         </div>
       </section>
 
-      <section class="panel">
-        <div class="panel-head">
-          <div><span class="panel-label">Last 7 Days</span><h2>近7日入库趋势</h2></div>
-        </div>
-        <div class="chart weekly-chart" id="weeklyTrend"></div>
-      </section>
-
       <section class="two-col">
+        <section class="panel">
+          <div class="panel-head">
+            <div><span class="panel-label">Last 7 Days</span><h2>近7日入库趋势</h2></div>
+          </div>
+          <div class="chart weekly-chart" id="weeklyTrend"></div>
+        </section>
         <section class="panel">
           <div class="panel-head">
             <div><span class="panel-label">Trend</span><h2>分时入库趋势</h2></div>
@@ -865,6 +897,9 @@
           </div>
           <div class="chart" id="hourlyTrend"></div>
         </section>
+      </section>
+
+      <section class="two-col">
         <section class="panel">
           <div class="panel-head">
             <div><span class="panel-label">Business</span><h2>业务类型分布</h2></div>
@@ -875,9 +910,15 @@
           </div>
           <p class="muted" id="businessHint"></p>
         </section>
+        <section class="panel">
+          <div class="panel-head">
+            <div><span class="panel-label">Matrix</span><h2>品牌与业务类型</h2></div>
+          </div>
+          <div class="matrix" id="brandBusinessMatrix"></div>
+        </section>
       </section>
 
-      <section class="three-col">
+      <section class="two-col">
         <section class="panel">
           <div class="panel-head">
             <div><span class="panel-label">Compare</span><h2>品牌入库对比</h2></div>
@@ -892,17 +933,31 @@
         </section>
         <section class="panel">
           <div class="panel-head">
-            <div><span class="panel-label">Matrix</span><h2>品牌与业务类型</h2></div>
+            <div><span class="panel-label">Style</span><h2>款号集中度</h2></div>
           </div>
-          <div class="matrix" id="brandBusinessMatrix"></div>
+          <div class="style-list" id="styleFocus"></div>
         </section>
+      </section>
+
+      <section class="two-col">
         <section class="panel">
           <div class="panel-head">
-            <div><span class="panel-label">Quality</span><h2>数据质量</h2></div>
-            <button class="ghost-button" type="button" id="qualityButton">查看明细</button>
+            <div><span class="panel-label">Order</span><h2>入库单结构</h2></div>
           </div>
-          <div id="qualitySummary"></div>
+          <div class="insight-grid" id="orderStructure"></div>
         </section>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <div><span class="panel-label">Coverage</span><h2>供应商覆盖与时段</h2></div>
+        </div>
+        <div class="table-wrap coverage-table">
+          <table>
+            <thead><tr><th>供应商</th><th>品牌</th><th>业务类型</th><th>入库数量</th><th>入库单数</th><th>款数</th><th>首笔入仓</th><th>末笔入仓</th></tr></thead>
+            <tbody id="supplierCoverageBody"></tbody>
+          </table>
+        </div>
       </section>
 
       <section class="panel">
@@ -969,13 +1024,6 @@
       <button class="icon-button" type="button" data-close-drawer>×</button>
     </div>
     <div id="drawerContent"></div>
-  </aside>
-  <aside class="drawer" id="qualityDrawer" aria-hidden="true">
-    <div class="drawer-head">
-      <div><span class="panel-label">Quality</span><h2>数据质量明细</h2></div>
-      <button class="icon-button" type="button" data-close-drawer>×</button>
-    </div>
-    <div id="qualityContent"></div>
   </aside>
   <script src="../../assets/inbound-data.js"></script>
   <script src="../../assets/inbound-dashboard.js"></script>

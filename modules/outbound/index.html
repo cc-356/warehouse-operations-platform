@@ -115,15 +115,15 @@
     h3 { font-size: 15px; line-height: 1.25; letter-spacing: 0; }
     .muted, .hero-copy, .panel p { color: var(--muted); }
     .source-meta { min-width: 0; display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 12px; text-align: left; }
-    .source-meta span:not(.pill) { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .filters { position: relative; margin-bottom: 16px; padding: 12px 14px; display: grid; gap: 8px; }
-    .filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; align-items: end; }
+    .source-meta span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .filters { position: relative; margin-bottom: 12px; padding: 10px 12px 8px; display: grid; gap: 6px; }
+    .filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 8px 10px; align-items: end; }
     .field { min-width: 0; display: grid; gap: 4px; }
     .field label { color: var(--muted); font-size: 11px; font-weight: 800; white-space: nowrap; }
     .field input, .field select {
       width: 100%;
       min-width: 0;
-      height: 34px;
+      height: 32px;
       color: var(--ink);
       border: 1px solid var(--line);
       border-radius: 9px;
@@ -183,11 +183,16 @@
       stroke: currentColor;
     }
     .field.search { grid-column: span 1; max-width: none; }
-    .filter-status { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: end; }
-    .filter-summary { min-width: 0; display: grid; gap: 6px; align-content: end; }
-    .active-filters { min-width: 0; display: flex; gap: 8px; overflow-x: auto; padding-bottom: 1px; }
+    .filter-status { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: center; }
+    .filter-status.is-empty { display: none; }
+    .filter-summary { min-width: 0; display: grid; gap: 4px; align-content: center; }
+    .active-filters { min-width: 0; max-height: 27px; display: flex; flex-wrap: nowrap; gap: 6px; overflow-x: auto; overflow-y: hidden; padding-bottom: 0; }
+    .active-filters .tag { min-height: 24px; padding: 4px 9px; white-space: nowrap; }
+    .source-meta { min-height: 24px; align-items: center; }
     .date-shortcuts { min-width: 0; display: flex; align-items: end; gap: 6px; flex-wrap: wrap; align-self: end; }
-    .date-shortcuts .mini-button { min-width: 68px; min-height: 34px; }
+    .date-shortcuts .mini-button { min-width: 64px; min-height: 30px; padding: 4px 9px; }
+    .filter-reset { display: flex; align-items: end; justify-content: flex-end; }
+    #resetButton { min-height: 32px; padding: 6px 12px; white-space: nowrap; }
     .sidebar {
       position: fixed;
       top: 50%;
@@ -315,6 +320,10 @@
     .metric .unit { margin-left: 4px; color: var(--muted); font-size: 13px; font-weight: 700; }
     .metric .desc { margin-top: 8px; min-height: 28px; color: var(--muted); font-size: 12px; }
     .metric .compare { margin-top: 6px; color: var(--accent-strong); font-size: 12px; }
+    .metric-stack { display: grid; grid-template-rows: 1fr 1fr; gap: 10px; padding: 0; background: transparent; }
+    .metric-mini { min-width: 0; padding: 12px 14px; border-radius: 14px; background: rgba(255,255,255,.035); overflow: hidden; }
+    .metric-mini span { display: block; color: var(--muted); font-size: 12px; font-weight: 800; }
+    .metric-mini strong { display: block; margin-top: 6px; font-size: 22px; line-height: 1; font-weight: 900; }
     .sub-metrics { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
     .sub-card { min-height: 62px; padding: 11px 12px; border: 1px solid var(--line); border-radius: var(--radius-inner); background: rgba(255,255,255,.035); overflow: hidden; }
     .sub-card span { display: block; color: var(--muted); font-size: 12px; }
@@ -361,6 +370,12 @@
     .axis { color: var(--muted); fill: var(--muted); font-size: 11px; }
     .axis.brand-label { fill: var(--accent-strong); font-size: 13px; font-weight: 900; }
     .bar-row { cursor: pointer; }
+    .bar-row.is-dim { opacity: .28; }
+    .bar-row.is-active text { fill: var(--accent-strong); }
+    .bar-row.is-active rect:not(.bar-bg),
+    .bar-row.is-active path {
+      filter: drop-shadow(0 0 8px rgba(110, 231, 210, .42));
+    }
     .bar-row:hover .bar-bg { fill: rgba(255,255,255,.09); }
     .anomaly-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px; }
     .anomaly-card {
@@ -458,6 +473,9 @@
         <div class="field"><label for="shipperFilter">发货员</label><select id="shipperFilter"></select></div>
         <div class="field"><label for="provinceFilter">省份</label><select id="provinceFilter"></select></div>
         <div class="field search"><label for="keywordFilter">出库单号 / 快递单号</label><input id="keywordFilter" type="search" placeholder="输入关键词"></div>
+        <div class="filter-reset">
+          <button class="primary-button" id="resetButton" type="button">重置筛选</button>
+        </div>
         <div class="date-shortcuts" aria-label="日期快捷筛选">
           <button class="mini-button" type="button" data-date-range="latest">最新日期</button>
           <button class="mini-button" type="button" data-date-range="last7">最近7天</button>
@@ -467,13 +485,7 @@
       <div class="filter-status">
         <div class="filter-summary">
           <div class="active-filters" id="activeFilters"></div>
-          <div class="source-meta">
-            <span class="pill" id="currentFilterText">-</span>
-            <span id="warningText"></span>
-          </div>
-        </div>
-        <div class="actions">
-          <button class="primary-button" id="resetButton" type="button">重置筛选</button>
+          <div class="source-meta"><span id="warningText"></span></div>
         </div>
       </div>
     </section>
@@ -485,7 +497,6 @@
         </div>
         <div class="metric-grid" id="metricGrid"></div>
       </section>
-      <section class="sub-metrics" id="subMetricGrid"></section>
 
       <section class="grid-2">
         <section class="panel">
@@ -584,23 +595,32 @@
     <div class="detail-grid" id="detailGrid"></div>
   </aside>
 
-  <script id="outbound-data" type="application/json">{"schemaVersion":3,"historyMode":"daily-complete-snapshots","sourceFiles":["D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260724132240_179709390_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260728171117_180670842_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260728171131_180670922_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260728171153_180671060_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260728151852_180627452_1.xlsx"],"availableSourceFiles":["D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260724132240_179709390_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260728151852_180627452_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260728171117_180670842_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260728171131_180670922_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260728171153_180671060_1.xlsx"],"snapshots":[{"date":"2026-07-23","sourceFile":"D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260724132240_179709390_1.xlsx","recordCount":15638,"shippedOrders":11447,"sourceMtime":"2026-07-24 14:08:20"},{"date":"2026-07-24","sourceFile":"D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260728171117_180670842_1.xlsx","recordCount":16591,"shippedOrders":12390,"sourceMtime":"2026-07-28 17:12:28"},{"date":"2026-07-25","sourceFile":"D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260728171131_180670922_1.xlsx","recordCount":13732,"shippedOrders":10553,"sourceMtime":"2026-07-28 17:12:30"},{"date":"2026-07-26","sourceFile":"D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260728171153_180671060_1.xlsx","recordCount":14943,"shippedOrders":9624,"sourceMtime":"2026-07-29 00:34:24"},{"date":"2026-07-27","sourceFile":"D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260728151852_180627452_1.xlsx","recordCount":19789,"shippedOrders":12420,"sourceMtime":"2026-07-28 15:19:23"}],"latestSourceFile":"D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260728151852_180627452_1.xlsx","generatedAt":"2026-07-31 00:34:04","latestDate":"2026-07-27","defaultFilters":{"dateFrom":"2026-07-27","dateTo":"2026-07-27","status":"已出库"},"warnings":[],"records":[],"availableDates":["2026-07-23","2026-07-24","2026-07-25","2026-07-26","2026-07-27"],"recordFiles":{"2026-07-23":"data/outbound-records-2026-07-23.json","2026-07-24":"data/outbound-records-2026-07-24.json","2026-07-25":"data/outbound-records-2026-07-25.json","2026-07-26":"data/outbound-records-2026-07-26.json","2026-07-27":"data/outbound-records-2026-07-27.json"},"dateStats":{"2026-07-23":{"records":15638,"shipped":0},"2026-07-24":{"records":16591,"shipped":0},"2026-07-25":{"records":13732,"shipped":0},"2026-07-26":{"records":14943,"shipped":0},"2026-07-27":{"records":19789,"shipped":0}},"filterOptions":{"shop":["CHENSMCHEN FUR五店","CHENSMCHEN唯品会店","CHENSMCHEN微信小店","CHENSMCHEN旗舰店","CHENSMCHEN淘宝店","JCSO  十店","JCSO 三店","JCSO 二店","JCSO 十一店","JCSO九店","JCSO五店","{线下}","周淼京东旗舰店","周淼唯品会店","周淼女装旗舰店（拼多多）","周淼小红书店","周淼服饰-鑫谷菱店","小红书合作寄样","星云的小店","淘宝天猫-周淼zhoumiao","知久","知久 x 甄选店","知久 x 致雅店","知久ZHIJIU","知久女装旗舰店-天猫","线下周淼","线下陈陈","线下鹭青一","陈陈会员中心店铺-星云","鹭青一京东旗舰店","鹭青一唯品会店铺","鹭青一女装官方旗舰店（拼多多）","鹭青一小店（抖音）","鹭青一小红书店","鹭青一淘宝","鹭青一的小店（抖音）","鹭青一的小店（有赞）","鹭青一私域","鹭青一（快手店铺）"],"platform":["京东商城","唯品会","商家自有商城","头条放心购","小红书","微信视频号","快手电商","拼多多","有赞微商城","淘宝天猫","线下店铺"],"status":["作废","已出库","待出库"],"express":["中通速递","京东快递","圆通速递","圆通速递-航空","现场取货","顺丰空运","顺丰速运"],"shipperName":["-","何建珍","余俊文","余海女","俞建伟","关晶晶","冯建豪","周吉雨","宿仙梅","尤佳辉","庞海春","张佳明","张妹花","张川","易奎","曹志龙","李雯雅","梁雪丽","王凤龙","田立立","肖林","董树安","蒋丽娟","赵名扬","赵银","邹丽玉","陈强","陈艳琳","魏子晴","魏文敬","黄琴","黎白"],"province":["上海","上海市","云南","云南省","内蒙古自治区","北京","北京市","吉林","吉林省","四川省","天津","天津市","宁夏回族自治区","安徽","安徽省","山东","山东省","山西","山西省","广东省","广西","广西壮族自治区","新疆维吾尔自治区","江苏","江苏省","江西","江西省","河北","河北省","河南","河南省","浙江","浙江省","海南","海南省","湖北","湖北省","湖南","湖南省","甘肃","甘肃省","福建","福建省","西藏自治区","贵州","贵州省","辽宁","辽宁省","重庆","重庆市","陕西省","青海","青海省","黑龙江","黑龙江省"]}}</script>
+  <script id="outbound-data" type="application/json">{"schemaVersion":3,"historyMode":"daily-complete-snapshots","sourceFiles":["D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260724132240_179709390_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260728171117_180670842_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260728171131_180670922_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260728171153_180671060_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260728151852_180627452_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260804131224_182371894_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260804131247_182372018_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260804131316_182372147_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260804131330_182372215_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260804131349_182372314_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260804131402_182372377_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260804131415_182372446_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260808090803_183368184_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260808090916_183368797_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260808091301_183370735_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260808095101_183387920_1.xlsx"],"availableSourceFiles":["D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260724132240_179709390_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260728151852_180627452_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260728171117_180670842_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260728171131_180670922_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260728171153_180671060_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260804131224_182371894_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260804131247_182372018_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260804131316_182372147_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260804131330_182372215_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260804131349_182372314_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260804131402_182372377_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260804131415_182372446_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260808090803_183368184_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260808090916_183368797_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260808091301_183370735_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260807_api_20260808101126.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260808095101_183387920_1.xlsx"],"snapshots":[{"date":"2026-07-23","sourceFile":"D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260724132240_179709390_1.xlsx","recordCount":15638,"shippedOrders":11447,"voidedOrders":4190,"pendingOrders":1,"sourceMtime":"2026-07-24 14:08:20"},{"date":"2026-07-24","sourceFile":"D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260728171117_180670842_1.xlsx","recordCount":16591,"shippedOrders":12390,"voidedOrders":4201,"pendingOrders":0,"sourceMtime":"2026-07-28 17:12:28"},{"date":"2026-07-25","sourceFile":"D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260728171131_180670922_1.xlsx","recordCount":13732,"shippedOrders":10553,"voidedOrders":3179,"pendingOrders":0,"sourceMtime":"2026-07-28 17:12:30"},{"date":"2026-07-26","sourceFile":"D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260728171153_180671060_1.xlsx","recordCount":14943,"shippedOrders":9624,"voidedOrders":5309,"pendingOrders":10,"sourceMtime":"2026-07-29 00:34:24"},{"date":"2026-07-27","sourceFile":"D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260728151852_180627452_1.xlsx","recordCount":19789,"shippedOrders":12420,"voidedOrders":7359,"pendingOrders":10,"sourceMtime":"2026-07-28 15:19:23"},{"date":"2026-07-28","sourceFile":"D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260804131224_182371894_1.xlsx","recordCount":17020,"shippedOrders":12624,"voidedOrders":4396,"pendingOrders":0,"sourceMtime":"2026-08-04 13:14:15"},{"date":"2026-07-29","sourceFile":"D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260804131247_182372018_1.xlsx","recordCount":14777,"shippedOrders":11334,"voidedOrders":3443,"pendingOrders":0,"sourceMtime":"2026-08-04 13:14:19"},{"date":"2026-07-30","sourceFile":"D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260804131316_182372147_1.xlsx","recordCount":14716,"shippedOrders":11341,"voidedOrders":3375,"pendingOrders":0,"sourceMtime":"2026-08-04 13:14:19"},{"date":"2026-07-31","sourceFile":"D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260804131330_182372215_1.xlsx","recordCount":14298,"shippedOrders":11082,"voidedOrders":3216,"pendingOrders":0,"sourceMtime":"2026-08-04 13:14:21"},{"date":"2026-08-01","sourceFile":"D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260804131349_182372314_1.xlsx","recordCount":32913,"shippedOrders":12956,"voidedOrders":19957,"pendingOrders":0,"sourceMtime":"2026-08-04 13:14:25"},{"date":"2026-08-02","sourceFile":"D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260804131402_182372377_1.xlsx","recordCount":22913,"shippedOrders":16796,"voidedOrders":6117,"pendingOrders":0,"sourceMtime":"2026-08-04 13:14:36"},{"date":"2026-08-03","sourceFile":"D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260804131415_182372446_1.xlsx","recordCount":15436,"shippedOrders":9634,"voidedOrders":5801,"pendingOrders":1,"sourceMtime":"2026-08-05 00:41:46"},{"date":"2026-08-04","sourceFile":"D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260808090803_183368184_1.xlsx","recordCount":10166,"shippedOrders":8279,"voidedOrders":1886,"pendingOrders":0,"sourceMtime":"2026-08-08 09:08:49"},{"date":"2026-08-05","sourceFile":"D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260808090916_183368797_1.xlsx","recordCount":20827,"shippedOrders":13746,"voidedOrders":7081,"pendingOrders":0,"sourceMtime":"2026-08-08 09:10:51"},{"date":"2026-08-06","sourceFile":"D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260808091301_183370735_1.xlsx","recordCount":38516,"shippedOrders":16801,"voidedOrders":21715,"pendingOrders":0,"sourceMtime":"2026-08-08 09:21:53"},{"date":"2026-08-07","sourceFile":"D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260808095101_183387920_1.xlsx","recordCount":13040,"shippedOrders":10592,"voidedOrders":2412,"pendingOrders":36,"sourceMtime":"2026-08-08 10:30:20"}],"latestSourceFile":"D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260808095101_183387920_1.xlsx","generatedAt":"2026-08-09 16:48:03","latestDate":"2026-08-07","defaultFilters":{"dateFrom":"2026-08-07","dateTo":"2026-08-07","status":"已出库"},"warnings":[],"filterOptions":{"shop":["CHENSMCHEN FUR五店","CHENSMCHEN唯品会店","CHENSMCHEN微信小店","CHENSMCHEN旗舰店","CHENSMCHEN淘宝店","JCSO  十店","JCSO 三店","JCSO 二店","JCSO 六店","JCSO 十一店","JCSO九店","JCSO五店","ONETOP旺桃水晶","{线下}","周淼京东旗舰店","周淼唯品会店","周淼女装旗舰店（拼多多）","周淼小红书店","周淼服饰-鑫谷菱店","小红书合作寄样","星云的小店","淘宝天猫-周淼zhoumiao","知久","知久 x TBAI","知久 x 甄选店","知久 x 致雅店","知久ZHIJIU","知久女装旗舰店-天猫","线下周淼","线下陈陈","线下鹭青一","陈陈会员中心店铺-星云","鹭青一京东旗舰店","鹭青一唯品会店铺","鹭青一女装官方旗舰店（拼多多）","鹭青一小店（抖音）","鹭青一小红书店","鹭青一淘宝","鹭青一的小店（抖音）","鹭青一的小店（有赞）","鹭青一私域","鹭青一（快手店铺）"],"platform":["京东商城","唯品会","商家自有商城","头条放心购","小红书","微信视频号","快手电商","拼多多","有赞微商城","淘宝天猫","线下店铺"],"status":["作废","取消","已出库","待出库"],"express":["中通速递","京东快递","圆通速递","圆通速递-航空","无需物流","现场取货","顺丰空运","顺丰速运","顺丰速运到付"],"shipperName":["临时工3","临时工6","临时工9","何建珍","余俊文","余海女","俞建伟","关晶晶","冯建豪","周吉雨","宿仙梅","尤佳辉","庞海春","张佳明","张妹花","张川","易奎","曹志龙","李元","李雯雅","梁雪丽","王凤龙","王成","田立立","肖林","董树安","蒋丽娟","蒋周斌","赵名扬","赵银","邹丽玉","陈强","陈艳琳","魏子晴","魏文敬","黄琴","黎白"],"province":["-","上海","上海市","云南","云南省","内蒙古","内蒙古自治区","北京","北京市","吉林","吉林省","四川省","天津","天津市","宁夏回族自治区","安徽","安徽省","山东","山东省","山西","山西省","广东省","广西","广西壮族自治区","新疆","新疆维吾尔自治区","江苏","江苏省","江西","江西省","河北","河北省","河南","河南省","浙江","浙江省","海南","海南省","湖北","湖北省","湖南","湖南省","甘肃","甘肃省","福建","福建省","西藏","西藏自治区","贵州","贵州省","辽宁","辽宁省","重庆","重庆市","陕西省","青海","青海省","黑龙江","黑龙江省"]},"dailyDataPath":"assets/outbound/daily","dailyRecordFiles":{"2026-07-23":"assets/outbound/daily/2026-07-23.json","2026-07-24":"assets/outbound/daily/2026-07-24.json","2026-07-25":"assets/outbound/daily/2026-07-25.json","2026-07-26":"assets/outbound/daily/2026-07-26.json","2026-07-27":"assets/outbound/daily/2026-07-27.json","2026-07-28":"assets/outbound/daily/2026-07-28.json","2026-07-29":"assets/outbound/daily/2026-07-29.json","2026-07-30":"assets/outbound/daily/2026-07-30.json","2026-07-31":"assets/outbound/daily/2026-07-31.json","2026-08-01":"assets/outbound/daily/2026-08-01.json","2026-08-02":"assets/outbound/daily/2026-08-02.json","2026-08-03":"assets/outbound/daily/2026-08-03.json","2026-08-04":"assets/outbound/daily/2026-08-04.json","2026-08-05":"assets/outbound/daily/2026-08-05.json","2026-08-06":"assets/outbound/daily/2026-08-06.json","2026-08-07":"assets/outbound/daily/2026-08-07.json"},"snapshotDataPath":"assets/outbound/snapshots","snapshotFiles":{"2026-07-23":"assets/outbound/snapshots/2026-07-23.json","2026-07-24":"assets/outbound/snapshots/2026-07-24.json","2026-07-25":"assets/outbound/snapshots/2026-07-25.json","2026-07-26":"assets/outbound/snapshots/2026-07-26.json","2026-07-27":"assets/outbound/snapshots/2026-07-27.json","2026-07-28":"assets/outbound/snapshots/2026-07-28.json","2026-07-29":"assets/outbound/snapshots/2026-07-29.json","2026-07-30":"assets/outbound/snapshots/2026-07-30.json","2026-07-31":"assets/outbound/snapshots/2026-07-31.json","2026-08-01":"assets/outbound/snapshots/2026-08-01.json","2026-08-02":"assets/outbound/snapshots/2026-08-02.json","2026-08-03":"assets/outbound/snapshots/2026-08-03.json","2026-08-04":"assets/outbound/snapshots/2026-08-04.json","2026-08-05":"assets/outbound/snapshots/2026-08-05.json","2026-08-06":"assets/outbound/snapshots/2026-08-06.json","2026-08-07":"assets/outbound/snapshots/2026-08-07.json"}}</script>
   <script>
     (() => {
       const rawData = JSON.parse(document.getElementById("outbound-data").textContent);
       let records = [];
-      const recordsByDate = new Map();
-      const recordLoaders = new Map();
-      const availableDates = rawData.availableDates || Object.keys(rawData.recordFiles || {}).sort();
+      const loadedDates = new Map();
+      const loadedFullDates = new Set();
+      const snapshotStats = new Map((rawData.snapshots || []).map(item => [item.date, item]));
+      const availableDates = (rawData.snapshots || []).map(item => item.date).filter(Boolean).sort();
       const latestAvailableDate = availableDates[availableDates.length - 1] || rawData.defaultFilters.dateTo || rawData.defaultFilters.dateFrom || "";
       const initialDate = rawData.defaultFilters.dateTo || latestAvailableDate;
+      const dataPathPrefix = "../../" + (rawData.dailyDataPath || "assets/outbound/daily");
+      const snapshotPathPrefix = "../../" + (rawData.snapshotDataPath || "assets/outbound/snapshots");
+      window.__outboundDailyData = window.__outboundDailyData || {};
+      window.__outboundSnapshots = window.__outboundSnapshots || {};
+      const loadedSnapshotViews = new Map();
+      let currentSnapshotView = null;
+      let currentSnapshotDates = [];
       const state = {
-        filters: {...rawData.defaultFilters, brand: "", shop: "", platform: "", express: "", shipper: "", province: "", keyword: "", anomaly: ""},
+        filters: {...rawData.defaultFilters, brand: "", shop: "", platform: "", express: "", shipper: "", province: "", productName: "", durationBucket: "", keyword: "", anomaly: ""},
         calendarYear: Number((initialDate || "").slice(0, 4)) || new Date().getFullYear(),
         calendarMonth: Number((initialDate || "").slice(5, 7)) || (new Date().getMonth() + 1),
         trendMetric: "orders",
         brandMetric: "orders",
         shipperMetric: "orders",
+        chartHighlights: {},
         tableSearch: "",
         page: 1,
         pageSize: 50,
@@ -673,49 +693,105 @@
       function monthStart(dateText) {
         return dateText ? `${dateText.slice(0, 8)}01` : "";
       }
+      function datesInRange(from, to) {
+        const start = from || to || latestAvailableDate;
+        const end = to || from || latestAvailableDate;
+        return availableDates.filter(date => (!start || date >= start) && (!end || date <= end));
+      }
+      async function loadDate(dateText) {
+        if (!dateText || loadedDates.has(dateText)) return;
+        let payload = null;
+        if (window.location.protocol !== "file:") {
+          const snapshotResponse = await fetch(`${snapshotPathPrefix}/${dateText}.json`);
+          if (snapshotResponse.ok) {
+            payload = await snapshotResponse.json();
+          } else {
+            const response = await fetch(`${dataPathPrefix}/${dateText}.json`);
+            if (!response.ok) throw new Error(`Failed to load outbound snapshot for ${dateText}`);
+            payload = await response.json();
+          }
+        } else {
+          payload = await loadSnapshotScript(dateText);
+        }
+        if (payload.view) loadedSnapshotViews.set(dateText, payload.view);
+        loadedDates.set(dateText, payload.records || payload.view?.recentDetails || []);
+      }
+      function loadSnapshotScript(dateText) {
+        return new Promise((resolve, reject) => {
+          if (window.__outboundSnapshots[dateText]) {
+            resolve(window.__outboundSnapshots[dateText]);
+            return;
+          }
+          const script = document.createElement("script");
+          script.src = `${snapshotPathPrefix}/${dateText}.js`;
+          script.onload = () => {
+            const payload = window.__outboundSnapshots[dateText];
+            payload ? resolve(payload) : loadDateScript(dateText).then(resolve, reject);
+          };
+          script.onerror = () => loadDateScript(dateText).then(resolve, reject);
+          document.head.appendChild(script);
+        });
+      }
+      function loadDateScript(dateText) {
+        return new Promise((resolve, reject) => {
+          if (window.__outboundDailyData[dateText]) {
+            resolve(window.__outboundDailyData[dateText]);
+            return;
+          }
+          const script = document.createElement("script");
+          script.src = `${dataPathPrefix}/${dateText}.js`;
+          script.onload = () => {
+            const payload = window.__outboundDailyData[dateText];
+            payload ? resolve(payload) : reject(new Error(`Daily outbound script did not register ${dateText}`));
+          };
+          script.onerror = () => reject(new Error(`Failed to load outbound data script for ${dateText}`));
+          document.head.appendChild(script);
+        });
+      }
+      async function loadFullDateRecords(dateText) {
+        if (!dateText || loadedFullDates.has(dateText)) return;
+        let payload = null;
+        if (window.location.protocol !== "file:") {
+          const response = await fetch(`${dataPathPrefix}/${dateText}.json`);
+          if (!response.ok) throw new Error(`Failed to load outbound records for ${dateText}`);
+          payload = await response.json();
+        } else {
+          payload = await loadDateScript(dateText);
+        }
+        loadedDates.set(dateText, payload.records || []);
+        loadedFullDates.add(dateText);
+      }
+      function requiresFullRecords() {
+        const f = state.filters;
+        return (f.status || "") !== "已出库"
+          || Boolean(f.brand || f.shop || f.platform || f.express || f.shipper || f.province || f.productName || f.durationBucket || f.keyword || f.anomaly);
+      }
+      async function ensureRangeLoaded() {
+        const dates = datesInRange(state.filters.dateFrom, state.filters.dateTo);
+        const compareDates = previousDateRange();
+        await Promise.all([...new Set([...dates, ...compareDates])].map(loadDate));
+        records = dates.flatMap(date => loadedDates.get(date) || []);
+        currentSnapshotDates = dates;
+        currentSnapshotView = aggregateSnapshotViews(dates);
+        if (requiresFullRecords()) {
+          await Promise.all([...new Set([...dates, ...compareDates])].map(loadFullDateRecords));
+          records = dates.flatMap(date => loadedDates.get(date) || []);
+        }
+      }
+      async function refresh() {
+        try {
+          await ensureRangeLoaded();
+          render();
+        } catch (error) {
+          console.error(error);
+          qs("moduleState").textContent = "数据加载失败";
+          document.querySelectorAll(".chart").forEach(node => node.innerHTML = `<div class="state">数据加载失败，请检查日度 JSON 文件</div>`);
+        }
+      }
       function selectedCalendarDate() {
         return state.filters.dateFrom === state.filters.dateTo
           ? state.filters.dateTo
           : state.filters.dateTo || state.filters.dateFrom || latestAvailableDate;
-      }
-      function datesInCurrentRange() {
-        const from = state.filters.dateFrom || availableDates[0] || "";
-        const to = state.filters.dateTo || latestAvailableDate || from;
-        return availableDates.filter(date => (!from || date >= from) && (!to || date <= to));
-      }
-      function updateActiveRecords() {
-        records = datesInCurrentRange().flatMap(date => recordsByDate.get(date) || []);
-      }
-      async function loadRecordsForDate(dateText) {
-        if (!dateText || recordsByDate.has(dateText)) return true;
-        if (recordLoaders.has(dateText)) return recordLoaders.get(dateText);
-        const file = rawData.recordFiles?.[dateText] || `data/outbound-records-${dateText}.json`;
-        const loader = fetch(file)
-          .then(response => {
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            return response.json();
-          })
-          .then(payload => {
-            recordsByDate.set(dateText, Array.isArray(payload.records) ? payload.records : []);
-            return true;
-          })
-          .catch(error => {
-            console.error(error);
-            recordsByDate.set(dateText, []);
-            return false;
-          });
-        recordLoaders.set(dateText, loader);
-        return loader;
-      }
-      async function ensureRecordsForCurrentRange() {
-        const dates = datesInCurrentRange();
-        if (!dates.length) {
-          records = [];
-          return;
-        }
-        qs("moduleState").textContent = `正在加载 ${dates.length} 天明细...`;
-        await Promise.all(dates.map(loadRecordsForDate));
-        updateActiveRecords();
       }
       function syncCalendarPosition() {
         const dateText = selectedCalendarDate();
@@ -727,8 +803,10 @@
         }
       }
       function dateStats(dateText) {
-        const summary = rawData.dateStats?.[dateText];
-        if (summary && !recordsByDate.has(dateText)) return summary;
+        const meta = snapshotStats.get(dateText);
+        if (meta) {
+          return { records: meta.recordCount || 0, shipped: meta.shippedOrders || 0 };
+        }
         const rows = records.filter(r => r.date === dateText);
         return {
           records: rows.length,
@@ -744,7 +822,7 @@
         return values.length ? values : [...new Set(records.map(r => r[key]).filter(Boolean))].sort((a,b) => String(a).localeCompare(String(b), "zh-CN"));
       }
       function buildColorMaps() {
-        const defaults = records.filter(r => r.date === rawData.defaultFilters.dateFrom && r.status === "已出库");
+        const defaults = records.filter(r => r.status === "已出库");
         const mapByOrders = (key, rows = defaults) => new Map(groupRows(rows, key).sort((a,b) => b.orders - a.orders).map((item, index) => [item.label, colors[index % colors.length]]));
         colorMaps.brand = brandColors;
         colorMaps.durationBucket = durationColors;
@@ -790,7 +868,7 @@
             };
             syncCalendarPosition();
             state.page = 1;
-            render();
+            refresh();
           });
         });
         qs("resetButton").addEventListener("click", resetDefault);
@@ -817,9 +895,10 @@
       }
       function resetDefault() {
         state.filters = {...rawData.defaultFilters, brand: "", shop: "", platform: "", express: "", shipper: "", province: "", keyword: "", anomaly: ""};
+        state.chartHighlights = {};
         syncFilterInputs();
         state.page = 1;
-        render();
+        refresh();
       }
       function setDateRange(range) {
         const latest = latestAvailableDate;
@@ -836,7 +915,7 @@
         syncCalendarPosition();
         syncFilterInputs();
         state.page = 1;
-        render();
+        refresh();
       }
       function setSingleDate(dateText) {
         state.filters.dateFrom = dateText;
@@ -844,7 +923,7 @@
         syncCalendarPosition();
         state.page = 1;
         syncFilterInputs();
-        render();
+        refresh();
       }
       function openDatePicker(id) {
         const input = qs(id);
@@ -860,6 +939,7 @@
       }
       function syncFilterInputs() {
         syncCalendarPosition();
+        syncChartHighlightsFromFilters();
         qs("dateFrom").value = state.filters.dateFrom || "";
         qs("dateTo").value = state.filters.dateTo || "";
         qs("brandFilter").value = state.filters.brand || "";
@@ -871,6 +951,11 @@
         qs("provinceFilter").value = state.filters.province || "";
         qs("keywordFilter").value = state.filters.keyword || "";
         syncDateShortcutState();
+      }
+      function syncChartHighlightsFromFilters() {
+        ["brand", "platform", "express", "shipper", "province", "productName", "durationBucket"].forEach(key => {
+          state.chartHighlights[key] = state.filters[key] || "";
+        });
       }
       function syncDateShortcutState() {
         document.querySelectorAll("[data-date-range]").forEach(button => button.classList.remove("active"));
@@ -962,12 +1047,35 @@
           button.addEventListener("click", () => setSingleDate(button.dataset.date));
         });
       }
-      function filterRows({ignoreStatus = false, forceStatus = null} = {}) {
+      function filterRows({ignoreStatus = false, forceStatus = null, ignoreFilterKey = ""} = {}) {
         const f = state.filters;
         const keyword = (f.keyword || "").toLowerCase();
         return records.filter(r => {
           if (f.dateFrom && r.date < f.dateFrom) return false;
           if (f.dateTo && r.date > f.dateTo) return false;
+          if (ignoreFilterKey !== "brand" && f.brand && r.brand !== f.brand) return false;
+          if (ignoreFilterKey !== "shop" && f.shop && r.shop !== f.shop) return false;
+          if (ignoreFilterKey !== "platform" && f.platform && r.platform !== f.platform) return false;
+          const status = forceStatus ?? f.status;
+          if (!ignoreStatus && status && r.status !== status) return false;
+          if (ignoreFilterKey !== "express" && f.express && r.express !== f.express) return false;
+          if (ignoreFilterKey !== "shipper" && f.shipper && r.shipperName !== f.shipper) return false;
+          if (ignoreFilterKey !== "province" && f.province && r.province !== f.province) return false;
+          if (ignoreFilterKey !== "productName" && f.productName && (r.productName || r.productInfo || "-") !== f.productName) return false;
+          if (ignoreFilterKey !== "durationBucket" && f.durationBucket && r.durationBucket !== f.durationBucket) return false;
+          if (f.anomaly && !r.anomalies.includes(f.anomaly)) return false;
+          if (keyword && !`${r.outboundNo} ${r.trackingNo}`.toLowerCase().includes(keyword)) return false;
+          return true;
+        });
+      }
+      function previousDateRange() {
+        const currentDates = datesInRange(state.filters.dateFrom, state.filters.dateTo);
+        return currentDates.map(date => shiftDate(date, -1)).filter(date => availableDates.includes(date));
+      }
+      function filterRowsFrom(sourceRows, {ignoreStatus = false, forceStatus = null} = {}) {
+        const f = state.filters;
+        const keyword = (f.keyword || "").toLowerCase();
+        return sourceRows.filter(r => {
           if (f.brand && r.brand !== f.brand) return false;
           if (f.shop && r.shop !== f.shop) return false;
           if (f.platform && r.platform !== f.platform) return false;
@@ -976,28 +1084,122 @@
           if (f.express && r.express !== f.express) return false;
           if (f.shipper && r.shipperName !== f.shipper) return false;
           if (f.province && r.province !== f.province) return false;
+          if (f.productName && (r.productName || r.productInfo || "-") !== f.productName) return false;
+          if (f.durationBucket && r.durationBucket !== f.durationBucket) return false;
           if (f.anomaly && !r.anomalies.includes(f.anomaly)) return false;
           if (keyword && !`${r.outboundNo} ${r.trackingNo}`.toLowerCase().includes(keyword)) return false;
           return true;
         });
       }
+      function previousRows() {
+        const sourceRows = previousDateRange().flatMap(date => loadedDates.get(date) || []);
+        return filterRowsFrom(sourceRows);
+      }
+      function compareText(current, previous, unit = "") {
+        if (!Number.isFinite(previous) || previous === 0) return "前日无可比数据";
+        const delta = current - previous;
+        const sign = delta > 0 ? "+" : "";
+        const percent = `${delta > 0 ? "+" : ""}${(delta / previous * 100).toFixed(1)}%`;
+        const formatted = Math.abs(delta) < 10 && !Number.isInteger(delta) ? one.format(delta) : num(delta);
+        return `较前日 ${sign}${formatted}${unit} / ${percent}`;
+      }
       function applyChartFilter(key, value) {
         state.filters[key] = state.filters[key] === value ? "" : value;
+        state.chartHighlights[key] = state.filters[key] || "";
         state.page = 1;
         syncFilterInputs();
-        render();
+        refresh();
+      }
+      function chartClass(filterKey, label) {
+        const active = state.chartHighlights[filterKey];
+        if (!active) return "";
+        return active === label ? " is-active" : " is-dim";
       }
       function activeRows() { return filterRows(); }
       function filteredForStatusOverview() { return filterRows({ignoreStatus: true}); }
+      function canUseSnapshotView() {
+        const f = state.filters;
+        return Boolean(currentSnapshotView)
+          && (f.status || "") === "已出库"
+          && !f.brand && !f.shop && !f.platform && !f.express && !f.shipper && !f.province && !f.productName && !f.durationBucket && !f.keyword && !f.anomaly;
+      }
+      function mergeSummary(items) {
+        const list = items.filter(Boolean);
+        const base = list.reduce((acc, item) => ({
+          orders: (acc.orders || 0) + (item.orders || 0),
+          items: (acc.items || 0) + (item.items || 0),
+          packages: (acc.packages || 0) + (item.packages || 0),
+          weight: (acc.weight || 0) + (item.weight || 0),
+          paid: (acc.paid || 0) + (item.paid || 0),
+          anomalyOrders: (acc.anomalyOrders || 0) + (item.anomalyOrders || 0),
+          durationWeight: (acc.durationWeight || 0) + ((item.avgDuration || 0) * (item.orders || 0)),
+          multiItemWeight: (acc.multiItemWeight || 0) + ((item.multiItemRate || 0) * (item.orders || 0)),
+        }), {});
+        const orders = base.orders || 0;
+        return {
+          orders,
+          items: base.items || 0,
+          packages: base.packages || 0,
+          weight: base.weight || 0,
+          paid: base.paid || 0,
+          anomalyOrders: base.anomalyOrders || 0,
+          avgDuration: orders ? base.durationWeight / orders : 0,
+          avgItemsPerOrder: orders ? (base.items || 0) / orders : 0,
+          multiItemRate: orders ? base.multiItemWeight / orders : 0,
+        };
+      }
+      function mergeGroups(groups, limit = 0) {
+        const map = new Map();
+        groups.flat().filter(Boolean).forEach(item => {
+          const label = item.label || "-";
+          const current = map.get(label) || {label};
+          map.set(label, {...current, ...mergeSummary([current, item])});
+        });
+        const merged = [...map.values()].sort((a,b) => (b.orders || 0) - (a.orders || 0));
+        return limit ? merged.slice(0, limit) : merged;
+      }
+      function mergeHourly(groups) {
+        const map = new Map(Array.from({length: 24}, (_, hour) => {
+          const label = `${String(hour).padStart(2,"0")}:00`;
+          return [label, {label, orders: 0, items: 0, weight: 0}];
+        }));
+        groups.flat().filter(Boolean).forEach(item => {
+          const current = map.get(item.label) || {label: item.label, orders: 0, items: 0, weight: 0};
+          current.orders += item.orders || 0;
+          current.items += item.items || 0;
+          current.weight += item.weight || 0;
+          map.set(item.label, current);
+        });
+        return [...map.values()];
+      }
+      function aggregateSnapshotViews(dates) {
+        const views = dates.map(date => loadedSnapshotViews.get(date)).filter(Boolean);
+        if (!views.length || views.length !== dates.length) return null;
+        return {
+          summary: mergeSummary(views.map(view => view.summary)),
+          allOrders: mergeSummary(views.map(view => view.allOrders)),
+          status: mergeGroups(views.map(view => view.status || [])),
+          platform: mergeGroups(views.map(view => view.platform || []), 12),
+          express: mergeGroups(views.map(view => view.express || []), 12),
+          hourly: mergeHourly(views.map(view => view.hourly || [])),
+          shopTop: mergeGroups(views.map(view => view.shopTop || []), 15),
+          brandTop: mergeGroups(views.map(view => view.brandTop || []), 8),
+          provinceTop: mergeGroups(views.map(view => view.provinceTop || []), 15),
+          shipperTop: mergeGroups(views.map(view => view.shipperTop || []), 15),
+          productTop: mergeGroups(views.map(view => view.productTop || []), 15),
+          duration: mergeGroups(views.map(view => view.duration || [])),
+          anomalies: mergeGroups(views.map(view => view.anomalies || [])),
+          recentDetails: views.flatMap(view => view.recentDetails || []).sort((a,b) => String(b.outboundDate || "").localeCompare(String(a.outboundDate || ""), "zh-CN", {numeric: true})).slice(0, 500),
+        };
+      }
+      function previousSnapshotSummary() {
+        return mergeSummary(previousDateRange().map(date => loadedSnapshotViews.get(date)?.summary));
+      }
       function metricButtonGroup(id, entries, currentKey, update) {
         qs(id).innerHTML = entries.map(([key,label]) => `<button class="mini-button ${currentKey === key ? "active" : ""}" data-key="${key}" type="button">${label}</button>`).join("");
         qs(id).querySelectorAll("button").forEach(btn => btn.addEventListener("click", () => { update(btn.dataset.key); render(); }));
       }
-      let renderToken = 0;
-      async function render() {
-        const token = ++renderToken;
-        await ensureRecordsForCurrentRange();
-        if (token !== renderToken) return;
+      function render() {
         try {
           const rows = activeRows();
           buildColorMaps();
@@ -1016,15 +1218,36 @@
       function renderFilterText(rows) {
         const f = state.filters;
         const chips = [];
-        if (f.dateFrom || f.dateTo) chips.push(`${f.dateFrom || "最早"} 至 ${f.dateTo || "最新"}`);
-        ["brand","shop","platform","status","express","shipper","province","anomaly"].forEach(key => { if (f[key]) chips.push(f[key]); });
+        ["brand","shop","platform","express","shipper","province","productName","durationBucket","anomaly"].forEach(key => { if (f[key]) chips.push(f[key]); });
         if (f.keyword) chips.push(`搜索 ${f.keyword}`);
-        qs("activeFilters").innerHTML = chips.length ? chips.map(x => `<span class="tag">${esc(x)}</span>`).join("") : `<span class="tag">全部记录</span>`;
-        qs("currentFilterText").textContent = chips.length ? chips.join("｜") : "全部出库记录";
-        qs("moduleState").textContent = `${num(rows.length)} 条记录`;
-        qs("warningText").textContent = rawData.warnings?.length ? `字段提示：${rawData.warnings.length} 个文件存在缺失字段` : "";
+        qs("activeFilters").innerHTML = chips.map(x => `<span class="tag">${esc(x)}</span>`).join("");
+        qs("moduleState").textContent = canUseSnapshotView() ? `${num(currentSnapshotView.summary?.orders || 0)} 条记录` : `${num(rows.length)} 条记录`;
+        const warning = rawData.warnings?.length ? `字段提示：${rawData.warnings.length} 个文件存在缺失字段` : "";
+        qs("warningText").textContent = warning;
+        document.querySelector(".filter-status")?.classList.toggle("is-empty", !chips.length && !warning);
       }
       function renderMetrics(rows) {
+        if (canUseSnapshotView()) {
+          const summary = currentSnapshotView.summary || {};
+          const allOrders = currentSnapshotView.allOrders || {};
+          const prior = previousSnapshotSummary();
+          const core = [
+            ["有效出库订单量", num(summary.orders || 0), "单", "", compareText(summary.orders || 0, prior.orders, "单")],
+            ["出库商品件数", num(summary.items || 0), "件", "", compareText(summary.items || 0, prior.items, "件")],
+            ["出库包裹数", num(summary.packages || 0), "件", "", compareText(summary.packages || 0, prior.packages, "件")],
+            ["平均出库处理时长", one.format(summary.avgDuration || 0), "分钟", "", compareText(summary.avgDuration || 0, prior.avgDuration, "分钟")],
+            ["异常订单数", num(summary.anomalyOrders || 0), "单", "", compareText(summary.anomalyOrders || 0, prior.anomalyOrders, "单")]
+          ];
+          qs("metricGrid").innerHTML = core.map(([label,value,unit,desc,compare]) => `
+            <article class="metric"><span class="label">${label}</span><strong>${value}<span class="unit">${unit}</span></strong><div class="desc">${desc}</div><div class="compare">${compare}</div></article>
+          `).join("");
+          const sub = [
+            ["平均每单件数", summary.orders ? `${two.format(summary.avgItemsPerOrder || 0)} 件` : "-"],
+            ["多件订单占比", `${one.format(summary.multiItemRate || 0)}%`],
+          ];
+          qs("metricGrid").innerHTML += `<article class="metric metric-stack">${sub.map(([label,value]) => `<div class="metric-mini"><span>${label}</span><strong>${value}</strong></div>`).join("")}</article>`;
+          return;
+        }
         const durations = rows.map(r => r.durationMinutes).filter(v => Number.isFinite(v));
         const orders = rows.length;
         const items = sum(rows, r => r.itemCount);
@@ -1032,25 +1255,28 @@
         const weight = sum(rows, r => r.weight);
         const paidTotal = sum(rows, r => r.paid);
         const anomalyCount = rows.filter(r => r.anomalies.length).length;
+        const priorRows = previousRows();
+        const priorDurations = priorRows.map(r => r.durationMinutes).filter(v => Number.isFinite(v));
+        const priorOrders = priorRows.length;
+        const priorItems = sum(priorRows, r => r.itemCount);
+        const priorPackages = sum(priorRows, r => r.packages);
+        const priorAvgDuration = avg(priorDurations);
+        const priorAnomalyCount = priorRows.filter(r => r.anomalies.length).length;
         const core = [
-          ["有效出库订单量", num(orders), "单", "默认仅统计状态为已出库的订单", "暂无对比数据"],
-          ["出库商品件数", num(items), "件", "从商品信息开头数字提取", "暂无对比数据"],
-          ["出库包裹数", num(packages), "件", "按包裹数字段汇总", "暂无对比数据"],
-          ["实称总重量", one.format(weight), "kg", "作废单不计入重量", "暂无对比数据"],
-          ["平均出库处理时长", one.format(avg(durations)), "分钟", "出库日期减创建日期", "暂无对比数据"],
-          ["异常订单数", num(anomalyCount), "单", "按六类异常规则识别", "暂无对比数据"]
+          ["有效出库订单量", num(orders), "单", "默认仅统计状态为已出库的订单", compareText(orders, priorOrders, "单")],
+          ["出库商品件数", num(items), "件", "从商品信息开头数字提取", compareText(items, priorItems, "件")],
+          ["出库包裹数", num(packages), "件", "按包裹数字段汇总", compareText(packages, priorPackages, "件")],
+          ["平均出库处理时长", one.format(avg(durations)), "分钟", "出库日期减创建日期", compareText(avg(durations), priorAvgDuration, "分钟")],
+          ["异常订单数", num(anomalyCount), "单", "按六类异常规则识别", compareText(anomalyCount, priorAnomalyCount, "单")]
         ];
         qs("metricGrid").innerHTML = core.map(([label,value,unit,desc,compare]) => `
           <article class="metric"><span class="label">${label}</span><strong>${value}<span class="unit">${unit}</span></strong><div class="desc">${desc}</div><div class="compare">${compare}</div></article>
         `).join("");
         const sub = [
           ["平均每单件数", orders ? `${two.format(items / orders)} 件` : "-"],
-          ["平均每单重量", orders ? `${two.format(weight / orders)} kg` : "-"],
-          ["实付金额", money.format(paidTotal)],
-          ["平均订单金额", orders ? money.format(paidTotal / orders) : "-"],
           ["多件订单占比", `${pct(rows.filter(r => r.itemCount > 1).length, orders, 1)}%`],
         ];
-        qs("subMetricGrid").innerHTML = sub.map(([label,value]) => `<article class="sub-card"><span>${label}</span><strong>${value}</strong></article>`).join("");
+        qs("metricGrid").innerHTML += `<article class="metric metric-stack">${sub.map(([label,value]) => `<div class="metric-mini"><span>${label}</span><strong>${value}</strong></div>`).join("")}</article>`;
       }
       function groupRows(rows, key, valueFns) {
         const map = new Map();
@@ -1070,15 +1296,29 @@
         metricButtonGroup("trendMetricButtons", [["orders","订单量"],["items","商品件数"],["weight","实称重量"]], state.trendMetric, key => state.trendMetric = key);
         metricButtonGroup("brandMetricButtons", [["orders","订单量"],["items","商品件数"],["weight","实称重量"],["paid","实付金额"]], state.brandMetric, key => state.brandMetric = key);
         metricButtonGroup("shipperMetricButtons", [["orders","订单量"],["items","商品件数"],["weight","实称重量"],["avgDuration","平均处理时长"]], state.shipperMetric, key => state.shipperMetric = key);
+        if (canUseSnapshotView()) {
+          const view = currentSnapshotView;
+          renderHourlyFromSnapshot(view.hourly || []);
+          renderVerticalBars("brandChart", view.brandTop || [], state.brandMetric, "brand");
+          renderBrandOtherNote(rows);
+          renderDonut("platformChart", (view.platform || []).slice(0, 8), "platform");
+          renderBars("expressChart", (view.express || []).slice(0, 8), "orders", "express");
+          renderBars("shipperChart", (view.shipperTop || []).slice(0, 10), state.shipperMetric, "shipper");
+          renderDurationFromSnapshot(view.duration || []);
+          renderBars("provinceChart", (view.provinceTop || []).slice(0, 10), "orders", "province");
+          renderDonut("statusChart", view.status || [], "status");
+          renderBars("productChart", (view.productTop || []).slice(0, 10), "items", "productName");
+          return;
+        }
         renderHourly(rows);
-        renderBrand(rows);
-        renderDonut("platformChart", groupRows(rows, "platform").sort((a,b) => b.orders - a.orders).slice(0, 8), "platform");
-        renderBars("expressChart", groupRows(rows, "express").sort((a,b) => b.orders - a.orders).slice(0, 8), "orders", "express");
-        renderBars("shipperChart", groupRows(rows.filter(r => r.status === "已出库" && r.shipperName !== "-"), "shipperName").sort((a,b) => b[state.shipperMetric] - a[state.shipperMetric]).slice(0, 10), state.shipperMetric, "shipper");
-        renderDuration(rows);
-        renderBars("provinceChart", groupRows(rows, "province").sort((a,b) => b.orders - a.orders).slice(0, 10), "orders", "province");
+        renderBrand(filterRows({ignoreFilterKey: "brand"}));
+        renderDonut("platformChart", groupRows(filterRows({ignoreFilterKey: "platform"}), "platform").sort((a,b) => b.orders - a.orders).slice(0, 8), "platform");
+        renderBars("expressChart", groupRows(filterRows({ignoreFilterKey: "express"}), "express").sort((a,b) => b.orders - a.orders).slice(0, 8), "orders", "express");
+        renderBars("shipperChart", groupRows(filterRows({ignoreFilterKey: "shipper"}).filter(r => r.status === "已出库" && r.shipperName !== "-"), "shipperName").sort((a,b) => b[state.shipperMetric] - a[state.shipperMetric]).slice(0, 10), state.shipperMetric, "shipper");
+        renderDuration(filterRows({ignoreFilterKey: "durationBucket"}));
+        renderBars("provinceChart", groupRows(filterRows({ignoreFilterKey: "province"}), "province").sort((a,b) => b.orders - a.orders).slice(0, 10), "orders", "province");
         renderStatus();
-        renderBars("productChart", groupRows(rows, r => r.productName || r.productInfo || "-").sort((a,b) => b.items - a.items).slice(0, 10), "items", "productName");
+        renderBars("productChart", groupRows(filterRows({ignoreFilterKey: "productName"}), r => r.productName || r.productInfo || "-").sort((a,b) => b.items - a.items).slice(0, 10), "items", "productName");
       }
       function renderHourly(rows) {
         const grouped = Array.from({length: 24}, (_, hour) => ({label: `${String(hour).padStart(2,"0")}:00`, value: 0}));
@@ -1101,6 +1341,28 @@
             ${grouped.map((d,i) => peaks.includes(d.label) ? `<g><circle cx="${x(i)}" cy="${y(d.value)}" r="4" fill="#e8c170"></circle><text x="${x(i)}" y="${y(d.value)-9}" text-anchor="middle" fill="#e8c170" font-size="12">${num(d.value)}</text></g>` : "").join("")}
             ${grouped.filter((_,i) => i % 2 === 0).map((d,i) => `<text class="axis" x="${x(i*2)}" y="${h-8}" text-anchor="middle">${String(i*2).padStart(2,"0")}</text>`).join("")}
           </svg>` : emptyState("当前筛选无分时数据");
+      }
+      function renderHourlyFromSnapshot(data) {
+        const grouped = Array.from({length: 24}, (_, hour) => {
+          const label = `${String(hour).padStart(2,"0")}:00`;
+          const item = data.find(row => row.label === label) || {label, orders: 0, items: 0, weight: 0};
+          return {label, value: item[state.trendMetric] || 0};
+        });
+        const values = grouped.map(d => d.value);
+        const max = Math.max(...values, 1);
+        const peaks = [...grouped].sort((a,b) => b.value - a.value).slice(0, 2).filter(d => d.value > 0).map(d => d.label);
+        const w = 760, h = 250, left = 38, right = 14, top = 20, bottom = 34;
+        const x = i => left + i * ((w - left - right) / 23);
+        const y = v => top + (h - top - bottom) * (1 - v / max);
+        const points = grouped.map((d,i) => `${x(i)},${y(d.value)}`).join(" ");
+        const area = `${left},${h-bottom} ${points} ${w-right},${h-bottom}`;
+        qs("hourlyChart").innerHTML = values.some(Boolean) ? `
+          <svg viewBox="0 0 ${w} ${h}" role="img" aria-label="分时出库趋势">
+            <polygon points="${area}" fill="rgba(110,231,210,.16)"></polygon>
+            <polyline points="${points}" fill="none" stroke="#6ee7d2" stroke-width="3"></polyline>
+            ${grouped.map((d,i) => peaks.includes(d.label) ? `<g><circle cx="${x(i)}" cy="${y(d.value)}" r="4" fill="#e8c170"></circle><text x="${x(i)}" y="${y(d.value)-9}" text-anchor="middle" fill="#e8c170" font-size="12">${num(d.value)}</text></g>` : "").join("")}
+            ${grouped.filter((_,i) => i % 2 === 0).map((d,i) => `<text class="axis" x="${x(i*2)}" y="${h-8}" text-anchor="middle">${String(i*2).padStart(2,"0")}</text>`).join("")}
+          </svg>` : emptyState("当前快照无分时数据");
       }
       function renderBrand(rows) {
         const data = groupRows(rows, "brand").sort((a,b) => b[state.brandMetric] - a[state.brandMetric]);
@@ -1127,11 +1389,16 @@
         const slot = (w - left - right) / data.length;
         qs(id).innerHTML = `<svg viewBox="0 0 ${w} ${h}">${data.map((d,i) => {
           const bh = (h - top - bottom) * d[metricKey] / max;
-          const x = left + i * slot + 12;
+          const slotX = left + i * slot;
+          const slotCenter = slotX + slot / 2;
+          const barWidth = Math.max(10, Math.min(56, slot - 24));
+          const bgWidth = Math.max(24, Math.min(72, slot - 8));
+          const x = slotCenter - barWidth / 2;
+          const bgX = slotCenter - bgWidth / 2;
           const y = h - bottom - bh;
-          const labelX = left + i * slot + slot / 2;
+          const labelX = slotCenter;
           const color = colorFor(filterKey, d.label, i);
-          return `<g class="bar-row" data-key="${filterKey}" data-value="${esc(d.label)}"><rect x="${left+i*slot+4}" y="${top}" width="${slot-8}" height="${h-top-bottom}" rx="7" fill="rgba(255,255,255,.035)"></rect><rect x="${x}" y="${y}" width="${Math.max(10,slot-24)}" height="${bh}" rx="7" fill="${color}"></rect><text x="${labelX}" y="${Math.max(top+12,y-7)}" fill="#eef5f1" font-size="12" font-weight="800" text-anchor="middle">${formatMetric(d[metricKey], metricKey)}</text><circle cx="${labelX-24}" cy="${h-32}" r="4" fill="${color}"></circle><text class="axis brand-label" x="${labelX-14}" y="${h-27}" text-anchor="start">${esc(d.label)}</text></g>`;
+          return `<g class="bar-row${chartClass(filterKey, d.label)}" data-key="${filterKey}" data-value="${esc(d.label)}"><rect class="bar-bg" x="${bgX}" y="${top}" width="${bgWidth}" height="${h-top-bottom}" rx="7" fill="rgba(255,255,255,.035)"></rect><rect x="${x}" y="${y}" width="${barWidth}" height="${bh}" rx="7" fill="${color}"></rect><text x="${labelX}" y="${Math.max(top+12,y-7)}" fill="#eef5f1" font-size="12" font-weight="800" text-anchor="middle">${formatMetric(d[metricKey], metricKey)}</text><circle cx="${labelX-24}" cy="${h-32}" r="4" fill="${color}"></circle><text class="axis brand-label" x="${labelX-14}" y="${h-27}" text-anchor="start">${esc(d.label)}</text></g>`;
         }).join("")}</svg>`;
         qs(id).querySelectorAll(".bar-row").forEach(node => node.addEventListener("click", () => applyChartFilter(node.dataset.key, node.dataset.value)));
       }
@@ -1144,7 +1411,7 @@
           const y = top + i * (rowH + gap);
           const bw = (w - left - right) * d[metricKey] / max;
           const color = colorFor(filterKey, d.label, i);
-          return `<g class="bar-row" data-key="${filterKey}" data-value="${esc(d.label)}"><text x="0" y="${y+16}" fill="#eef5f1" font-size="12">${esc(d.label)}</text><rect class="bar-bg" x="${left}" y="${y}" width="${w-left-right}" height="${rowH}" rx="8" fill="rgba(255,255,255,.04)"></rect><rect x="${left}" y="${y}" width="${Math.max(2,bw)}" height="${rowH}" rx="8" fill="${color}"></rect><text x="${left+bw+8}" y="${y+16}" fill="#c9fff4" font-size="12">${formatMetric(d[metricKey], metricKey)} ${metricKey === "avgDuration" ? "" : pct(d[metricKey], total, 1) + "%"}</text></g>`;
+          return `<g class="bar-row${chartClass(filterKey, d.label)}" data-key="${filterKey}" data-value="${esc(d.label)}"><text x="0" y="${y+16}" fill="#eef5f1" font-size="12">${esc(d.label)}</text><rect class="bar-bg" x="${left}" y="${y}" width="${w-left-right}" height="${rowH}" rx="8" fill="rgba(255,255,255,.04)"></rect><rect x="${left}" y="${y}" width="${Math.max(2,bw)}" height="${rowH}" rx="8" fill="${color}"></rect><text x="${left+bw+8}" y="${y+16}" fill="#c9fff4" font-size="12">${formatMetric(d[metricKey], metricKey)} ${metricKey === "avgDuration" ? "" : pct(d[metricKey], total, 1) + "%"}</text></g>`;
         }).join("")}</svg>`;
         qs(id).querySelectorAll(".bar-row").forEach(node => node.addEventListener("click", () => applyChartFilter(node.dataset.key, node.dataset.value)));
       }
@@ -1157,9 +1424,9 @@
           const span = total ? d.orders / total * 360 : 0;
           const arc = describeArc(cx, cy, r, angle, angle + span);
           angle += span;
-          return `<path d="${arc}" fill="none" stroke="${colorFor(filterKey, d.label, i)}" stroke-width="${stroke}" data-key="${filterKey}" data-value="${esc(d.label)}" class="bar-row"></path>`;
+          return `<path d="${arc}" fill="none" stroke="${colorFor(filterKey, d.label, i)}" stroke-width="${stroke}" data-key="${filterKey}" data-value="${esc(d.label)}" class="bar-row${chartClass(filterKey, d.label)}"></path>`;
         }).join("");
-        qs(id).innerHTML = `<svg viewBox="0 0 560 260"><g>${arcs}<circle cx="${cx}" cy="${cy}" r="${r-stroke/2}" fill="rgba(3,9,11,.7)"></circle><text x="${cx}" y="${cy-4}" text-anchor="middle" fill="#eef5f1" font-size="24" font-weight="900">${num(total)}</text><text x="${cx}" y="${cy+18}" text-anchor="middle" fill="#8a9a96" font-size="12">订单数</text></g>${data.map((d,i) => `<g class="bar-row" data-key="${filterKey}" data-value="${esc(d.label)}"><rect x="250" y="${30+i*25}" width="10" height="10" rx="3" fill="${colorFor(filterKey, d.label, i)}"></rect><text x="268" y="${39+i*25}" fill="#eef5f1" font-size="12">${esc(d.label)}</text><text x="438" y="${39+i*25}" fill="#c9fff4" font-size="12" text-anchor="end">${num(d.orders)} / ${pct(d.orders,total,1)}%</text></g>`).join("")}</svg>`;
+        qs(id).innerHTML = `<svg viewBox="0 0 560 260"><g>${arcs}<circle cx="${cx}" cy="${cy}" r="${r-stroke/2}" fill="rgba(3,9,11,.7)"></circle><text x="${cx}" y="${cy-4}" text-anchor="middle" fill="#eef5f1" font-size="24" font-weight="900">${num(total)}</text><text x="${cx}" y="${cy+18}" text-anchor="middle" fill="#8a9a96" font-size="12">订单数</text></g>${data.map((d,i) => `<g class="bar-row${chartClass(filterKey, d.label)}" data-key="${filterKey}" data-value="${esc(d.label)}"><rect x="250" y="${30+i*25}" width="10" height="10" rx="3" fill="${colorFor(filterKey, d.label, i)}"></rect><text x="268" y="${39+i*25}" fill="#eef5f1" font-size="12">${esc(d.label)}</text><text x="438" y="${39+i*25}" fill="#c9fff4" font-size="12" text-anchor="end">${num(d.orders)} / ${pct(d.orders,total,1)}%</text></g>`).join("")}</svg>`;
         qs(id).querySelectorAll(".bar-row").forEach(node => node.addEventListener("click", () => applyChartFilter(node.dataset.key, node.dataset.value)));
       }
       function describeArc(cx, cy, r, start, end) {
@@ -1179,12 +1446,35 @@
         qs("durationAvgText").textContent = durations.length ? `${one.format(avg(durations))} 分钟` : "-";
         renderVerticalBars("durationChart", [...map.values()].filter(x => x.orders || x.label !== "未知"), "orders", "durationBucket");
       }
+      function renderDurationFromSnapshot(data) {
+        const durations = data.filter(item => item.orders || item.label !== "未知");
+        const weighted = [];
+        durations.forEach(item => {
+          if (Number.isFinite(item.avgDuration) && item.orders) weighted.push(item.avgDuration * item.orders);
+        });
+        const total = sum(durations, item => item.orders);
+        qs("durationAvgText").textContent = total && weighted.length ? `${one.format(sum(weighted, x => x) / total)} 分钟` : "-";
+        renderVerticalBars("durationChart", durations, "orders", "durationBucket");
+      }
       function renderStatus() {
         const rows = filteredForStatusOverview();
         const data = groupRows(rows, "status").sort((a,b) => b.orders - a.orders);
         renderDonut("statusChart", data, "status");
       }
       function renderAnomalies(rows) {
+        if (canUseSnapshotView()) {
+          const counts = new Map((currentSnapshotView.anomalies || []).map(item => [item.label, item.orders || 0]));
+          qs("anomalyGrid").innerHTML = anomalyLabels.map(label => {
+            const count = counts.get(label) || 0;
+            return `<button class="anomaly-card ${state.filters.anomaly === label ? "active" : ""}" data-label="${esc(label)}" type="button"><span class="icon">!</span><strong>${num(count)}</strong><span>${label}</span></button>`;
+          }).join("");
+          qs("anomalyGrid").querySelectorAll("button").forEach(btn => btn.addEventListener("click", () => {
+            state.filters.anomaly = state.filters.anomaly === btn.dataset.label ? "" : btn.dataset.label;
+            state.page = 1;
+            refresh();
+          }));
+          return;
+        }
         qs("anomalyGrid").innerHTML = anomalyLabels.map(label => {
           const count = rows.filter(r => r.anomalies.includes(label)).length;
           return `<button class="anomaly-card ${state.filters.anomaly === label ? "active" : ""}" data-label="${esc(label)}" type="button"><span class="icon">!</span><strong>${num(count)}</strong><span>${label}</span></button>`;
@@ -1192,7 +1482,7 @@
         qs("anomalyGrid").querySelectorAll("button").forEach(btn => btn.addEventListener("click", () => {
           state.filters.anomaly = state.filters.anomaly === btn.dataset.label ? "" : btn.dataset.label;
           state.page = 1;
-          render();
+          refresh();
         }));
       }
       function formatMetric(value, key) {
@@ -1265,9 +1555,8 @@
         URL.revokeObjectURL(url);
       }
       setupFilters();
-      buildColorMaps();
       renderColumnControls();
-      render();
+      refresh();
     })();
   </script>
 </body>
