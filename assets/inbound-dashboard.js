@@ -38,6 +38,16 @@
   const dayByDate = date => payload.days.find(day => day.date === date) || payload.days[0] || { records: [], warnings: [] };
   const currentDay = () => dayByDate(state.selectedDate);
   const hourOf = record => (record.warehouseTime || "").slice(11, 13);
+  const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const revealObserver = "IntersectionObserver" in window && !reduceMotion
+    ? new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) return;
+        revealObserver.unobserve(entry.target);
+        playChartReveal(entry.target);
+      });
+    }, { threshold: 0.24 })
+    : null;
   const setSelectedDate = date => {
     state.selectedDate = date || payload.selectedDate;
     const parts = String(state.selectedDate || "").split("-").map(Number);
@@ -149,6 +159,38 @@
 
   function groupedSummary(records, key) {
     return [...by(records, key)].map(([name, rows]) => ({ name, ...summary(rows), rows }));
+  }
+
+  function prepareChartReveal(element) {
+    element.querySelectorAll(".weekly-line").forEach(line => {
+      if (!line.getTotalLength) return;
+      const length = Math.ceil(line.getTotalLength());
+      line.style.setProperty("--line-length", length);
+      line.style.strokeDasharray = length;
+      line.style.strokeDashoffset = length;
+    });
+  }
+
+  function playChartReveal(element) {
+    prepareChartReveal(element);
+    element.classList.remove("is-animated");
+    void element.offsetWidth;
+    requestAnimationFrame(() => element.classList.add("is-animated"));
+  }
+
+  function queueChartReveal(id) {
+    const element = typeof id === "string" ? $(id) : id;
+    if (!element) return;
+    element.classList.add("chart-reveal");
+    if (reduceMotion) {
+      element.classList.add("is-animated");
+      return;
+    }
+    if (revealObserver) {
+      revealObserver.observe(element);
+      return;
+    }
+    playChartReveal(element);
   }
 
   function renderImportStatus() {
@@ -314,15 +356,18 @@
     const max = Math.max(1, ...rows.map(row => row.value));
     const total = rows.reduce((sum, row) => sum + row.value, 0);
     const displayRows = options.hideZero ? rows.filter(row => row.value > 0) : rows;
-    $(id).innerHTML = displayRows.length ? displayRows.map(row => `
+    $(id).classList.remove("is-animated");
+    $(id).classList.add("chart-reveal");
+    $(id).innerHTML = displayRows.length ? displayRows.map((row, index) => `
       <div class="bar-row">
         <span>${esc(row.name)}</span>
         <button class="bar-track" type="button" data-bar="${esc(row.name)}" style="border:0;padding:0;text-align:left">
-          <span class="bar-fill" style="display:block;width:${Math.max(2, row.value / max * 100)}%;background:${row.color || "var(--accent)"}"></span>
+          <span class="bar-fill" style="--i:${index};display:block;width:${Math.max(2, row.value / max * 100)}%;background:${row.color || "var(--accent)"}"></span>
         </button>
         <strong>${fmt(row.value)} <small>${pct(row.value, total)}</small></strong>
       </div>
     `).join("") : `<p class="muted">暂无数据</p>`;
+    queueChartReveal(id);
   }
 
   function renderDonut(id, rows, options = {}) {
@@ -338,7 +383,7 @@
       `).join("");
       $(id).innerHTML = `
         <div class="donut-chart${options.hideLegend ? " no-legend" : ""}" aria-label="${esc(options.title || "占比图")}">
-          <svg viewBox="0 0 200 200" role="img">
+          <svg class="chart-reveal" viewBox="0 0 200 200" role="img">
             <circle cx="100" cy="100" r="78" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="28"></circle>
             <circle cx="100" cy="100" r="50" fill="rgba(7,11,13,.86)"></circle>
             <text class="donut-center" x="100" y="96">${esc(options.center || "0")}</text>
@@ -347,6 +392,7 @@
           ${options.hideLegend ? "" : `<div class="donut-legend">${emptyLegend}</div>`}
         </div>
       `;
+      queueChartReveal($(id).querySelector(".chart-reveal"));
       return;
     }
     const radius = 78;
@@ -372,7 +418,7 @@
     `).join("");
     $(id).innerHTML = `
       <div class="donut-chart${options.hideLegend ? " no-legend" : ""}" aria-label="${esc(options.title || "占比图")}">
-        <svg viewBox="0 0 200 200" role="img">
+        <svg class="chart-reveal" viewBox="0 0 200 200" role="img">
           <circle cx="100" cy="100" r="${radius}" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="28"></circle>
           ${segments}
           <circle cx="100" cy="100" r="50" fill="rgba(7,11,13,.86)"></circle>
@@ -382,6 +428,7 @@
         ${options.hideLegend ? "" : `<div class="donut-legend">${legend}</div>`}
       </div>
     `;
+    queueChartReveal($(id).querySelector(".chart-reveal"));
   }
 
   function renderHourlyTrend(records) {
@@ -395,7 +442,7 @@
     const max = Math.max(1, ...buckets.map(item => item.value));
     const peak = buckets.reduce((best, item) => item.value > best.value ? item : best, buckets[0]);
     $("hourlyTrend").innerHTML = `
-      <svg viewBox="0 0 760 260" role="img" aria-label="分时入库趋势" style="width:100%;height:260px;display:block">
+      <svg class="chart-reveal" viewBox="0 0 760 260" role="img" aria-label="分时入库趋势" style="width:100%;height:260px;display:block">
         <line x1="44" y1="216" x2="736" y2="216" stroke="rgba(210,235,225,.18)" />
         ${buckets.map((item, index) => {
           const width = 20;
@@ -403,11 +450,12 @@
           const height = Math.max(2, item.value / max * 170);
           const y = 216 - height;
           const color = item.hour === peak.hour ? "var(--warn)" : "var(--accent)";
-          return `<g><rect class="hour-bar" data-hour="${item.hour}" x="${x}" y="${y}" width="${width}" height="${height}" rx="4" fill="${color}" opacity=".86"><title>${item.hour}:00 入库数量 ${item.quantity}，入库单 ${item.orders}，款数 ${item.styles}</title></rect>${index % 2 === 0 ? `<text x="${x + 10}" y="238" text-anchor="middle" fill="#8a9a96" font-size="10">${item.hour}</text>` : ""}</g>`;
+          return `<g><rect class="hour-bar" data-hour="${item.hour}" style="--i:${index}" x="${x}" y="${y}" width="${width}" height="${height}" rx="4" fill="${color}" opacity=".86"><title>${item.hour}:00 入库数量 ${item.quantity}，入库单 ${item.orders}，款数 ${item.styles}</title></rect>${index % 2 === 0 ? `<text class="chart-label" x="${x + 10}" y="238" text-anchor="middle" fill="#8a9a96" font-size="10">${item.hour}</text>` : ""}</g>`;
         }).join("")}
       </svg>
       <p class="muted">峰值时段：${peak.hour}:00，${metricName(state.trendMetric)} ${fmt(peak.value)}。点击柱形可联动筛选明细。</p>
     `;
+    queueChartReveal($("hourlyTrend").querySelector(".chart-reveal"));
   }
 
   function metricName(metric) {
@@ -467,7 +515,7 @@
       orders: buckets.reduce((sum, item) => sum + item.orders, 0)
     };
     $("weeklyTrend").innerHTML = buckets.length ? `
-      <svg viewBox="0 0 780 300" role="img" aria-label="近7日入库数量和入库单数趋势">
+      <svg class="chart-reveal" viewBox="0 0 780 300" role="img" aria-label="近7日入库数量和入库单数趋势">
         <line x1="${chartLeft}" y1="${chartBottom}" x2="${chartRight}" y2="${chartBottom}" stroke="rgba(210,235,225,.18)" />
         <line x1="${chartLeft}" y1="${chartTop}" x2="${chartLeft}" y2="${chartBottom}" stroke="rgba(210,235,225,.12)" />
         ${[0, .25, .5, .75, 1].map(rate => {
@@ -479,14 +527,14 @@
           const height = Math.max(2, (item.quantity / maxQuantity) * chartHeight);
           const y = chartBottom - height;
           return `<g class="week-group" data-week-date="${esc(item.date)}">
-            <rect x="${x - barWidth / 2}" y="${y}" width="${barWidth}" height="${height}" rx="6" fill="var(--accent)" opacity=".78">
+            <rect class="weekly-bar" style="--i:${index}" x="${x - barWidth / 2}" y="${y}" width="${barWidth}" height="${height}" rx="6" fill="var(--accent)" opacity=".78">
               <title>${esc(item.date)} 入库数量 ${fmt(item.quantity)}，入库单 ${fmt(item.orders)}，款数 ${fmt(item.styles)}</title>
             </rect>
-            <text x="${x}" y="264" text-anchor="middle" fill="#8a9a96" font-size="11">${esc(item.date.slice(5))}</text>
+            <text class="chart-label" x="${x}" y="264" text-anchor="middle" fill="#8a9a96" font-size="11">${esc(item.date.slice(5))}</text>
           </g>`;
         }).join("")}
-        <polyline points="${points.map(item => `${item.x},${item.y}`).join(" ")}" fill="none" stroke="var(--warn)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
-        ${points.map(item => `<circle cx="${item.x}" cy="${item.y}" r="5" fill="var(--warn)" stroke="#071012" stroke-width="2"><title>${esc(item.date)} 入库单 ${fmt(item.orders)}</title></circle>`).join("")}
+        <polyline class="weekly-line" points="${points.map(item => `${item.x},${item.y}`).join(" ")}" fill="none" stroke="var(--warn)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+        ${points.map((item, index) => `<circle class="chart-point" style="--i:${index}" cx="${item.x}" cy="${item.y}" r="5" fill="var(--warn)" stroke="#071012" stroke-width="2"><title>${esc(item.date)} 入库单 ${fmt(item.orders)}</title></circle>`).join("")}
       </svg>
       <div class="weekly-legend">
         <span><span class="legend-dot" style="background:var(--accent)"></span>柱：入库数量</span>
@@ -494,6 +542,7 @@
         <span>近7日合计：${fmt(total.quantity)} 件 / ${fmt(total.orders)} 单</span>
       </div>
     ` : `<p class="muted">暂无近7日数据</p>`;
+    queueChartReveal($("weeklyTrend").querySelector(".chart-reveal"));
   }
 
   function renderMatrix(records) {
