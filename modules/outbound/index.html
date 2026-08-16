@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>仓库运营管理平台 - 出库管理</title>
+  <title>仓储运营管理平台 - 出库管理</title>
   <style>
     :root {
       --bg: #070b0d;
@@ -350,6 +350,13 @@
     .duration-summary span { color: var(--muted); font-size: 12px; font-weight: 900; }
     .duration-summary strong { color: var(--accent-strong); font-size: 22px; line-height: 1; font-weight: 950; }
     .chart { min-height: 250px; height: 250px; position: relative; overflow: hidden; contain: layout paint; }
+    .chart svg {
+      opacity: .01;
+      transform: translateY(8px);
+    }
+    .chart.is-animated svg {
+      animation: chartFadeIn 920ms cubic-bezier(.2,.8,.2,1) forwards;
+    }
     .chart-note {
       margin-top: 10px;
       padding: 10px 12px;
@@ -377,6 +384,87 @@
       filter: drop-shadow(0 0 8px rgba(110, 231, 210, .42));
     }
     .bar-row:hover .bar-bg { fill: rgba(255,255,255,.09); }
+    .chart-bar {
+      transform-box: fill-box;
+      transform-origin: left center;
+    }
+    .chart-vbar {
+      transform-box: fill-box;
+      transform-origin: center bottom;
+    }
+    .chart-area {
+      transform-box: fill-box;
+      transform-origin: left bottom;
+    }
+    .chart-line {
+      stroke-dasharray: var(--line-length, 980);
+      stroke-dashoffset: var(--line-length, 980);
+    }
+    .chart-dot {
+      opacity: 0;
+      transform-box: fill-box;
+      transform-origin: center;
+    }
+    .chart-arc {
+      stroke-dasharray: var(--arc-length, 520);
+      stroke-dashoffset: var(--arc-length, 520);
+    }
+    .chart.is-animated .chart-vbar {
+      animation: chartGrowY 1120ms cubic-bezier(.2,.75,.18,1) both;
+      animation-delay: calc(var(--i, 0) * 66ms);
+    }
+    .chart.is-animated .chart-bar {
+      animation: chartGrowX 1040ms cubic-bezier(.2,.75,.18,1) both;
+      animation-delay: calc(var(--i, 0) * 60ms);
+    }
+    .chart.is-animated .chart-area {
+      animation: chartGrowX 1120ms cubic-bezier(.2,.75,.18,1) both;
+    }
+    .chart.is-animated .chart-line {
+      animation: chartDrawLine 1240ms cubic-bezier(.2,.75,.18,1) 140ms forwards;
+    }
+    .chart.is-animated .chart-dot {
+      animation: chartPop 720ms cubic-bezier(.18,.9,.24,1.25) forwards;
+      animation-delay: calc(620ms + var(--i, 0) * 105ms);
+    }
+    .chart.is-animated .chart-arc {
+      animation: chartDrawLine 1240ms cubic-bezier(.2,.75,.18,1) forwards;
+      animation-delay: calc(var(--i, 0) * 132ms);
+    }
+    @keyframes chartFadeIn {
+      from { opacity: .01; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes chartGrowY {
+      from { transform: scaleY(.02); opacity: .36; }
+      to { transform: scaleY(1); opacity: 1; }
+    }
+    @keyframes chartGrowX {
+      from { transform: scaleX(.02); opacity: .36; }
+      to { transform: scaleX(1); opacity: 1; }
+    }
+    @keyframes chartDrawLine {
+      to { stroke-dashoffset: 0; }
+    }
+    @keyframes chartPop {
+      from { opacity: 0; transform: scale(.45); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .chart svg,
+      .chart.is-animated svg,
+      .chart.is-animated .chart-vbar,
+      .chart.is-animated .chart-bar,
+      .chart.is-animated .chart-area,
+      .chart.is-animated .chart-line,
+      .chart.is-animated .chart-dot,
+      .chart.is-animated .chart-arc {
+        animation: none;
+        opacity: 1;
+        transform: none;
+        stroke-dashoffset: 0;
+      }
+    }
     .anomaly-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px; }
     .anomaly-card {
       min-height: 92px;
@@ -443,7 +531,7 @@
       <div class="platform-identity">
         <img class="platform-mark" src="../../assets/jingtang-warehouse-logo-clear.png" alt="井唐仓储" />
         <div class="platform-title">
-          <strong>仓库运营管理平台</strong>
+          <strong>仓储运营管理平台</strong>
           <div class="platform-breadcrumb"><span>运营驾驶舱</span><span>/</span><span>出库管理</span></div>
           <div class="platform-summary">以销售出库单为底表，默认统计“状态=已出库”的有效出库订单，联动查看品牌、平台、快递、发货员、时段、地区和异常订单。</div>
         </div>
@@ -595,7 +683,7 @@
     <div class="detail-grid" id="detailGrid"></div>
   </aside>
 
-  <script id="outbound-data" type="application/json">{"schemaVersion":3,"historyMode":"daily-complete-snapshots","sourceFiles":["D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260724132240_179709390_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260728171117_180670842_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260728171131_180670922_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260728171153_180671060_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260728151852_180627452_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260804131224_182371894_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260804131247_182372018_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260804131316_182372147_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260804131330_182372215_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260804131349_182372314_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260804131402_182372377_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260804131415_182372446_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260808090803_183368184_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260808090916_183368797_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260808091301_183370735_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260808095101_183387920_1.xlsx"],"availableSourceFiles":["D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260724132240_179709390_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260728151852_180627452_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260728171117_180670842_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260728171131_180670922_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260728171153_180671060_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260804131224_182371894_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260804131247_182372018_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260804131316_182372147_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260804131330_182372215_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260804131349_182372314_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260804131402_182372377_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260804131415_182372446_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260808090803_183368184_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260808090916_183368797_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260808091301_183370735_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260807_api_20260808101126.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260808095101_183387920_1.xlsx"],"snapshots":[{"date":"2026-07-23","sourceFile":"D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260724132240_179709390_1.xlsx","recordCount":15638,"shippedOrders":11447,"voidedOrders":4190,"pendingOrders":1,"sourceMtime":"2026-07-24 14:08:20"},{"date":"2026-07-24","sourceFile":"D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260728171117_180670842_1.xlsx","recordCount":16591,"shippedOrders":12390,"voidedOrders":4201,"pendingOrders":0,"sourceMtime":"2026-07-28 17:12:28"},{"date":"2026-07-25","sourceFile":"D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260728171131_180670922_1.xlsx","recordCount":13732,"shippedOrders":10553,"voidedOrders":3179,"pendingOrders":0,"sourceMtime":"2026-07-28 17:12:30"},{"date":"2026-07-26","sourceFile":"D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260728171153_180671060_1.xlsx","recordCount":14943,"shippedOrders":9624,"voidedOrders":5309,"pendingOrders":10,"sourceMtime":"2026-07-29 00:34:24"},{"date":"2026-07-27","sourceFile":"D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260728151852_180627452_1.xlsx","recordCount":19789,"shippedOrders":12420,"voidedOrders":7359,"pendingOrders":10,"sourceMtime":"2026-07-28 15:19:23"},{"date":"2026-07-28","sourceFile":"D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260804131224_182371894_1.xlsx","recordCount":17020,"shippedOrders":12624,"voidedOrders":4396,"pendingOrders":0,"sourceMtime":"2026-08-04 13:14:15"},{"date":"2026-07-29","sourceFile":"D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260804131247_182372018_1.xlsx","recordCount":14777,"shippedOrders":11334,"voidedOrders":3443,"pendingOrders":0,"sourceMtime":"2026-08-04 13:14:19"},{"date":"2026-07-30","sourceFile":"D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260804131316_182372147_1.xlsx","recordCount":14716,"shippedOrders":11341,"voidedOrders":3375,"pendingOrders":0,"sourceMtime":"2026-08-04 13:14:19"},{"date":"2026-07-31","sourceFile":"D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260804131330_182372215_1.xlsx","recordCount":14298,"shippedOrders":11082,"voidedOrders":3216,"pendingOrders":0,"sourceMtime":"2026-08-04 13:14:21"},{"date":"2026-08-01","sourceFile":"D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260804131349_182372314_1.xlsx","recordCount":32913,"shippedOrders":12956,"voidedOrders":19957,"pendingOrders":0,"sourceMtime":"2026-08-04 13:14:25"},{"date":"2026-08-02","sourceFile":"D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260804131402_182372377_1.xlsx","recordCount":22913,"shippedOrders":16796,"voidedOrders":6117,"pendingOrders":0,"sourceMtime":"2026-08-04 13:14:36"},{"date":"2026-08-03","sourceFile":"D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260804131415_182372446_1.xlsx","recordCount":15436,"shippedOrders":9634,"voidedOrders":5801,"pendingOrders":1,"sourceMtime":"2026-08-05 00:41:46"},{"date":"2026-08-04","sourceFile":"D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260808090803_183368184_1.xlsx","recordCount":10166,"shippedOrders":8279,"voidedOrders":1886,"pendingOrders":0,"sourceMtime":"2026-08-08 09:08:49"},{"date":"2026-08-05","sourceFile":"D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260808090916_183368797_1.xlsx","recordCount":20827,"shippedOrders":13746,"voidedOrders":7081,"pendingOrders":0,"sourceMtime":"2026-08-08 09:10:51"},{"date":"2026-08-06","sourceFile":"D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260808091301_183370735_1.xlsx","recordCount":38516,"shippedOrders":16801,"voidedOrders":21715,"pendingOrders":0,"sourceMtime":"2026-08-08 09:21:53"},{"date":"2026-08-07","sourceFile":"D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260808095101_183387920_1.xlsx","recordCount":13040,"shippedOrders":10592,"voidedOrders":2412,"pendingOrders":36,"sourceMtime":"2026-08-08 10:30:20"}],"latestSourceFile":"D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260808095101_183387920_1.xlsx","generatedAt":"2026-08-09 16:48:03","latestDate":"2026-08-07","defaultFilters":{"dateFrom":"2026-08-07","dateTo":"2026-08-07","status":"已出库"},"warnings":[],"filterOptions":{"shop":["CHENSMCHEN FUR五店","CHENSMCHEN唯品会店","CHENSMCHEN微信小店","CHENSMCHEN旗舰店","CHENSMCHEN淘宝店","JCSO  十店","JCSO 三店","JCSO 二店","JCSO 六店","JCSO 十一店","JCSO九店","JCSO五店","ONETOP旺桃水晶","{线下}","周淼京东旗舰店","周淼唯品会店","周淼女装旗舰店（拼多多）","周淼小红书店","周淼服饰-鑫谷菱店","小红书合作寄样","星云的小店","淘宝天猫-周淼zhoumiao","知久","知久 x TBAI","知久 x 甄选店","知久 x 致雅店","知久ZHIJIU","知久女装旗舰店-天猫","线下周淼","线下陈陈","线下鹭青一","陈陈会员中心店铺-星云","鹭青一京东旗舰店","鹭青一唯品会店铺","鹭青一女装官方旗舰店（拼多多）","鹭青一小店（抖音）","鹭青一小红书店","鹭青一淘宝","鹭青一的小店（抖音）","鹭青一的小店（有赞）","鹭青一私域","鹭青一（快手店铺）"],"platform":["京东商城","唯品会","商家自有商城","头条放心购","小红书","微信视频号","快手电商","拼多多","有赞微商城","淘宝天猫","线下店铺"],"status":["作废","取消","已出库","待出库"],"express":["中通速递","京东快递","圆通速递","圆通速递-航空","无需物流","现场取货","顺丰空运","顺丰速运","顺丰速运到付"],"shipperName":["临时工3","临时工6","临时工9","何建珍","余俊文","余海女","俞建伟","关晶晶","冯建豪","周吉雨","宿仙梅","尤佳辉","庞海春","张佳明","张妹花","张川","易奎","曹志龙","李元","李雯雅","梁雪丽","王凤龙","王成","田立立","肖林","董树安","蒋丽娟","蒋周斌","赵名扬","赵银","邹丽玉","陈强","陈艳琳","魏子晴","魏文敬","黄琴","黎白"],"province":["-","上海","上海市","云南","云南省","内蒙古","内蒙古自治区","北京","北京市","吉林","吉林省","四川省","天津","天津市","宁夏回族自治区","安徽","安徽省","山东","山东省","山西","山西省","广东省","广西","广西壮族自治区","新疆","新疆维吾尔自治区","江苏","江苏省","江西","江西省","河北","河北省","河南","河南省","浙江","浙江省","海南","海南省","湖北","湖北省","湖南","湖南省","甘肃","甘肃省","福建","福建省","西藏","西藏自治区","贵州","贵州省","辽宁","辽宁省","重庆","重庆市","陕西省","青海","青海省","黑龙江","黑龙江省"]},"dailyDataPath":"assets/outbound/daily","dailyRecordFiles":{"2026-07-23":"assets/outbound/daily/2026-07-23.json","2026-07-24":"assets/outbound/daily/2026-07-24.json","2026-07-25":"assets/outbound/daily/2026-07-25.json","2026-07-26":"assets/outbound/daily/2026-07-26.json","2026-07-27":"assets/outbound/daily/2026-07-27.json","2026-07-28":"assets/outbound/daily/2026-07-28.json","2026-07-29":"assets/outbound/daily/2026-07-29.json","2026-07-30":"assets/outbound/daily/2026-07-30.json","2026-07-31":"assets/outbound/daily/2026-07-31.json","2026-08-01":"assets/outbound/daily/2026-08-01.json","2026-08-02":"assets/outbound/daily/2026-08-02.json","2026-08-03":"assets/outbound/daily/2026-08-03.json","2026-08-04":"assets/outbound/daily/2026-08-04.json","2026-08-05":"assets/outbound/daily/2026-08-05.json","2026-08-06":"assets/outbound/daily/2026-08-06.json","2026-08-07":"assets/outbound/daily/2026-08-07.json"},"snapshotDataPath":"assets/outbound/snapshots","snapshotFiles":{"2026-07-23":"assets/outbound/snapshots/2026-07-23.json","2026-07-24":"assets/outbound/snapshots/2026-07-24.json","2026-07-25":"assets/outbound/snapshots/2026-07-25.json","2026-07-26":"assets/outbound/snapshots/2026-07-26.json","2026-07-27":"assets/outbound/snapshots/2026-07-27.json","2026-07-28":"assets/outbound/snapshots/2026-07-28.json","2026-07-29":"assets/outbound/snapshots/2026-07-29.json","2026-07-30":"assets/outbound/snapshots/2026-07-30.json","2026-07-31":"assets/outbound/snapshots/2026-07-31.json","2026-08-01":"assets/outbound/snapshots/2026-08-01.json","2026-08-02":"assets/outbound/snapshots/2026-08-02.json","2026-08-03":"assets/outbound/snapshots/2026-08-03.json","2026-08-04":"assets/outbound/snapshots/2026-08-04.json","2026-08-05":"assets/outbound/snapshots/2026-08-05.json","2026-08-06":"assets/outbound/snapshots/2026-08-06.json","2026-08-07":"assets/outbound/snapshots/2026-08-07.json"}}</script>
+  <script id="outbound-data" type="application/json">{"schemaVersion":3,"historyMode":"daily-complete-snapshots","sourceFiles":["D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260724132240_179709390_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260728171117_180670842_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260728171131_180670922_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260728171153_180671060_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260728151852_180627452_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260804131224_182371894_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260804131247_182372018_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260804131316_182372147_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260804131330_182372215_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260804131349_182372314_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260804131402_182372377_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260804131415_182372446_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260808090803_183368184_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260808090916_183368797_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260808091301_183370735_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260808095101_183387920_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260812090557_184292560_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260812090621_184292841_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260812090636_184293036_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260812090649_184293179_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260814091338_184816897_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260814091352_184817063_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260816090341_185258597_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260816090351_185258662_1.xlsx"],"availableSourceFiles":["D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260724132240_179709390_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260728151852_180627452_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260728171117_180670842_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260728171131_180670922_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260728171153_180671060_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260804131224_182371894_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260804131247_182372018_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260804131316_182372147_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260804131330_182372215_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260804131349_182372314_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260804131402_182372377_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260804131415_182372446_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260808090803_183368184_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260808090916_183368797_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260808091301_183370735_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260807_api_20260808101126.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260808095101_183387920_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260812090557_184292560_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260812090621_184292841_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260812090636_184293036_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260812090649_184293179_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260814091338_184816897_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260814091352_184817063_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260816090341_185258597_1.xlsx","D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260816090351_185258662_1.xlsx"],"snapshots":[{"date":"2026-07-23","sourceFile":"D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260724132240_179709390_1.xlsx","recordCount":15638,"shippedOrders":11447,"voidedOrders":4190,"pendingOrders":1,"sourceMtime":"2026-07-24 14:08:20"},{"date":"2026-07-24","sourceFile":"D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260728171117_180670842_1.xlsx","recordCount":16591,"shippedOrders":12390,"voidedOrders":4201,"pendingOrders":0,"sourceMtime":"2026-07-28 17:12:28"},{"date":"2026-07-25","sourceFile":"D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260728171131_180670922_1.xlsx","recordCount":13732,"shippedOrders":10553,"voidedOrders":3179,"pendingOrders":0,"sourceMtime":"2026-07-28 17:12:30"},{"date":"2026-07-26","sourceFile":"D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260728171153_180671060_1.xlsx","recordCount":14943,"shippedOrders":9624,"voidedOrders":5309,"pendingOrders":10,"sourceMtime":"2026-07-29 00:34:24"},{"date":"2026-07-27","sourceFile":"D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260728151852_180627452_1.xlsx","recordCount":19789,"shippedOrders":12420,"voidedOrders":7359,"pendingOrders":10,"sourceMtime":"2026-07-28 15:19:23"},{"date":"2026-07-28","sourceFile":"D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260804131224_182371894_1.xlsx","recordCount":17020,"shippedOrders":12624,"voidedOrders":4396,"pendingOrders":0,"sourceMtime":"2026-08-04 13:14:15"},{"date":"2026-07-29","sourceFile":"D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260804131247_182372018_1.xlsx","recordCount":14777,"shippedOrders":11334,"voidedOrders":3443,"pendingOrders":0,"sourceMtime":"2026-08-04 13:14:19"},{"date":"2026-07-30","sourceFile":"D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260804131316_182372147_1.xlsx","recordCount":14716,"shippedOrders":11341,"voidedOrders":3375,"pendingOrders":0,"sourceMtime":"2026-08-04 13:14:19"},{"date":"2026-07-31","sourceFile":"D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260804131330_182372215_1.xlsx","recordCount":14298,"shippedOrders":11082,"voidedOrders":3216,"pendingOrders":0,"sourceMtime":"2026-08-04 13:14:21"},{"date":"2026-08-01","sourceFile":"D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260804131349_182372314_1.xlsx","recordCount":32913,"shippedOrders":12956,"voidedOrders":19957,"pendingOrders":0,"sourceMtime":"2026-08-04 13:14:25"},{"date":"2026-08-02","sourceFile":"D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260804131402_182372377_1.xlsx","recordCount":22913,"shippedOrders":16796,"voidedOrders":6117,"pendingOrders":0,"sourceMtime":"2026-08-04 13:14:36"},{"date":"2026-08-03","sourceFile":"D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260804131415_182372446_1.xlsx","recordCount":15436,"shippedOrders":9634,"voidedOrders":5801,"pendingOrders":1,"sourceMtime":"2026-08-05 00:41:46"},{"date":"2026-08-04","sourceFile":"D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260808090803_183368184_1.xlsx","recordCount":10166,"shippedOrders":8279,"voidedOrders":1886,"pendingOrders":0,"sourceMtime":"2026-08-08 09:08:49"},{"date":"2026-08-05","sourceFile":"D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260808090916_183368797_1.xlsx","recordCount":20827,"shippedOrders":13746,"voidedOrders":7081,"pendingOrders":0,"sourceMtime":"2026-08-08 09:10:51"},{"date":"2026-08-06","sourceFile":"D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260808091301_183370735_1.xlsx","recordCount":38516,"shippedOrders":16801,"voidedOrders":21715,"pendingOrders":0,"sourceMtime":"2026-08-08 09:21:53"},{"date":"2026-08-07","sourceFile":"D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260808095101_183387920_1.xlsx","recordCount":13040,"shippedOrders":10592,"voidedOrders":2412,"pendingOrders":36,"sourceMtime":"2026-08-08 10:30:20"},{"date":"2026-08-08","sourceFile":"D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260812090557_184292560_1.xlsx","recordCount":18293,"shippedOrders":10623,"voidedOrders":7667,"pendingOrders":0,"sourceMtime":"2026-08-12 09:07:00"},{"date":"2026-08-09","sourceFile":"D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260812090621_184292841_1.xlsx","recordCount":13895,"shippedOrders":8242,"voidedOrders":5653,"pendingOrders":0,"sourceMtime":"2026-08-12 09:07:01"},{"date":"2026-08-10","sourceFile":"D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260812090636_184293036_1.xlsx","recordCount":10313,"shippedOrders":9456,"voidedOrders":857,"pendingOrders":0,"sourceMtime":"2026-08-12 09:07:03"},{"date":"2026-08-11","sourceFile":"D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260812090649_184293179_1.xlsx","recordCount":12495,"shippedOrders":10409,"voidedOrders":2082,"pendingOrders":1,"sourceMtime":"2026-08-12 09:07:24"},{"date":"2026-08-12","sourceFile":"D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260814091338_184816897_1.xlsx","recordCount":13890,"shippedOrders":10752,"voidedOrders":3128,"pendingOrders":10,"sourceMtime":"2026-08-14 09:30:00"},{"date":"2026-08-13","sourceFile":"D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260814091352_184817063_1.xlsx","recordCount":13405,"shippedOrders":10091,"voidedOrders":3257,"pendingOrders":57,"sourceMtime":"2026-08-14 09:30:01"},{"date":"2026-08-14","sourceFile":"D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260816090341_185258597_1.xlsx","recordCount":13231,"shippedOrders":10206,"voidedOrders":3024,"pendingOrders":1,"sourceMtime":"2026-08-16 09:05:10"},{"date":"2026-08-15","sourceFile":"D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260816090351_185258662_1.xlsx","recordCount":19129,"shippedOrders":11574,"voidedOrders":7508,"pendingOrders":47,"sourceMtime":"2026-08-16 09:05:12"}],"latestSourceFile":"D:\\仓储运营管理平台\\聚水潭导出数据\\销售出库单_20260816090351_185258662_1.xlsx","generatedAt":"2026-08-16 09:08:57","latestDate":"2026-08-15","defaultFilters":{"dateFrom":"2026-08-15","dateTo":"2026-08-15","status":"已出库"},"warnings":[],"filterOptions":{"shop":["CHENSMCHEN FUR五店","CHENSMCHEN唯品会店","CHENSMCHEN微信小店","CHENSMCHEN旗舰店","CHENSMCHEN淘宝店","JCSO","JCSO  十店","JCSO 三店","JCSO 二店","JCSO 六店","JCSO 十一店","JCSO九店","JCSO五店","JCSO女装旗舰店（华雁）","ONETOP旺桃水晶","{线下}","周淼京东旗舰店","周淼唯品会店","周淼女装旗舰店（拼多多）","周淼小红书店","周淼服饰-鑫谷菱店","小红书合作寄样","星云的小店","淘宝天猫-周淼zhoumiao","益行服饰 周淼抖店","知久","知久 x TBAI","知久 x 甄选店","知久 x 致雅店","知久ZHIJIU","知久女装旗舰店-天猫","线下周淼","线下陈陈","线下鹭青一","陈陈会员中心店铺-星云","鹭青一京东旗舰店","鹭青一唯品会店铺","鹭青一女装官方旗舰店（拼多多）","鹭青一小店（抖音）","鹭青一小红书店","鹭青一淘宝","鹭青一的小店（抖音）","鹭青一的小店（有赞）","鹭青一私域","鹭青一（快手店铺）"],"platform":["京东商城","唯品会","商家自有商城","头条放心购","小红书","微信视频号","快手电商","拼多多","有赞微商城","淘宝天猫","线下店铺"],"status":["作废","取消","已出库","待出库"],"express":["中通速递","京东快递","圆通速递","圆通速递-航空","无需物流","现场取货","顺丰空运","顺丰速运","顺丰速运到付"],"shipperName":["临时工3","临时工6","临时工9","何建珍","余俊文","余海女","俞建伟","关晶晶","冯建豪","周吉雨","宿仙梅","尤佳辉","庞海春","张佳明","张妹花","张川","易奎","曹志龙","李元","李雯雅","梁雪丽","王凤龙","王成","田立立","肖林","董树安","蒋丽娟","蒋周斌","赵名扬","赵银","邹丽玉","陈强","陈艳琳","魏子晴","魏文敬","黄琴","黎白"],"province":["-","上海","上海市","云南","云南省","内蒙古","内蒙古自治区","北京","北京市","吉林","吉林省","四川省","天津","天津市","宁夏","宁夏回族自治区","安徽","安徽省","山东","山东省","山西","山西省","广东","广东省","广西","广西壮族自治区","新疆","新疆维吾尔自治区","江苏","江苏省","江西","江西省","河北","河北省","河南","河南省","浙江","浙江省","海南","海南省","湖北","湖北省","湖南","湖南省","甘肃","甘肃省","福建","福建省","西藏","西藏自治区","贵州","贵州省","辽宁","辽宁省","重庆","重庆市","陕西省","青海","青海省","黑龙江","黑龙江省"]},"dailyDataPath":"assets/outbound/daily","dailyRecordFiles":{"2026-07-23":"assets/outbound/daily/2026-07-23.json","2026-07-24":"assets/outbound/daily/2026-07-24.json","2026-07-25":"assets/outbound/daily/2026-07-25.json","2026-07-26":"assets/outbound/daily/2026-07-26.json","2026-07-27":"assets/outbound/daily/2026-07-27.json","2026-07-28":"assets/outbound/daily/2026-07-28.json","2026-07-29":"assets/outbound/daily/2026-07-29.json","2026-07-30":"assets/outbound/daily/2026-07-30.json","2026-07-31":"assets/outbound/daily/2026-07-31.json","2026-08-01":"assets/outbound/daily/2026-08-01.json","2026-08-02":"assets/outbound/daily/2026-08-02.json","2026-08-03":"assets/outbound/daily/2026-08-03.json","2026-08-04":"assets/outbound/daily/2026-08-04.json","2026-08-05":"assets/outbound/daily/2026-08-05.json","2026-08-06":"assets/outbound/daily/2026-08-06.json","2026-08-07":"assets/outbound/daily/2026-08-07.json","2026-08-08":"assets/outbound/daily/2026-08-08.json","2026-08-09":"assets/outbound/daily/2026-08-09.json","2026-08-10":"assets/outbound/daily/2026-08-10.json","2026-08-11":"assets/outbound/daily/2026-08-11.json","2026-08-12":"assets/outbound/daily/2026-08-12.json","2026-08-13":"assets/outbound/daily/2026-08-13.json","2026-08-14":"assets/outbound/daily/2026-08-14.json","2026-08-15":"assets/outbound/daily/2026-08-15.json"},"snapshotDataPath":"assets/outbound/snapshots","snapshotFiles":{"2026-07-23":"assets/outbound/snapshots/2026-07-23.json","2026-07-24":"assets/outbound/snapshots/2026-07-24.json","2026-07-25":"assets/outbound/snapshots/2026-07-25.json","2026-07-26":"assets/outbound/snapshots/2026-07-26.json","2026-07-27":"assets/outbound/snapshots/2026-07-27.json","2026-07-28":"assets/outbound/snapshots/2026-07-28.json","2026-07-29":"assets/outbound/snapshots/2026-07-29.json","2026-07-30":"assets/outbound/snapshots/2026-07-30.json","2026-07-31":"assets/outbound/snapshots/2026-07-31.json","2026-08-01":"assets/outbound/snapshots/2026-08-01.json","2026-08-02":"assets/outbound/snapshots/2026-08-02.json","2026-08-03":"assets/outbound/snapshots/2026-08-03.json","2026-08-04":"assets/outbound/snapshots/2026-08-04.json","2026-08-05":"assets/outbound/snapshots/2026-08-05.json","2026-08-06":"assets/outbound/snapshots/2026-08-06.json","2026-08-07":"assets/outbound/snapshots/2026-08-07.json","2026-08-08":"assets/outbound/snapshots/2026-08-08.json","2026-08-09":"assets/outbound/snapshots/2026-08-09.json","2026-08-10":"assets/outbound/snapshots/2026-08-10.json","2026-08-11":"assets/outbound/snapshots/2026-08-11.json","2026-08-12":"assets/outbound/snapshots/2026-08-12.json","2026-08-13":"assets/outbound/snapshots/2026-08-13.json","2026-08-14":"assets/outbound/snapshots/2026-08-14.json","2026-08-15":"assets/outbound/snapshots/2026-08-15.json"}}</script>
   <script>
     (() => {
       const rawData = JSON.parse(document.getElementById("outbound-data").textContent);
@@ -669,6 +757,13 @@
 
       function esc(value) {
         return String(value ?? "").replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
+      }
+      function normalizedProductName(value) {
+        return String(value || "-").replace(/^\s*\d+(?:\.\d+)?\s*(?:\.|\u3001)\s*/, "").trim() || "-";
+      }
+      function shortLabel(value, max = 10) {
+        const text = String(value || "-");
+        return text.length > max ? `${text.slice(0, max)}...` : text;
       }
       function num(value) { return fmt.format(Math.round(Number(value || 0))); }
       function sum(rows, fn) { return rows.reduce((total, row) => total + Number(fn(row) || 0), 0); }
@@ -1061,7 +1156,7 @@
           if (ignoreFilterKey !== "express" && f.express && r.express !== f.express) return false;
           if (ignoreFilterKey !== "shipper" && f.shipper && r.shipperName !== f.shipper) return false;
           if (ignoreFilterKey !== "province" && f.province && r.province !== f.province) return false;
-          if (ignoreFilterKey !== "productName" && f.productName && (r.productName || r.productInfo || "-") !== f.productName) return false;
+          if (ignoreFilterKey !== "productName" && f.productName && normalizedProductName(r.productName || r.productInfo || "-") !== f.productName) return false;
           if (ignoreFilterKey !== "durationBucket" && f.durationBucket && r.durationBucket !== f.durationBucket) return false;
           if (f.anomaly && !r.anomalies.includes(f.anomaly)) return false;
           if (keyword && !`${r.outboundNo} ${r.trackingNo}`.toLowerCase().includes(keyword)) return false;
@@ -1084,7 +1179,7 @@
           if (f.express && r.express !== f.express) return false;
           if (f.shipper && r.shipperName !== f.shipper) return false;
           if (f.province && r.province !== f.province) return false;
-          if (f.productName && (r.productName || r.productInfo || "-") !== f.productName) return false;
+          if (f.productName && normalizedProductName(r.productName || r.productInfo || "-") !== f.productName) return false;
           if (f.durationBucket && r.durationBucket !== f.durationBucket) return false;
           if (f.anomaly && !r.anomalies.includes(f.anomaly)) return false;
           if (keyword && !`${r.outboundNo} ${r.trackingNo}`.toLowerCase().includes(keyword)) return false;
@@ -1114,6 +1209,31 @@
         const active = state.chartHighlights[filterKey];
         if (!active) return "";
         return active === label ? " is-active" : " is-dim";
+      }
+      const chartAnimationObserver = "IntersectionObserver" in window
+        ? new IntersectionObserver(entries => {
+            entries.forEach(entry => {
+              if (!entry.isIntersecting) return;
+              const node = entry.target;
+              chartAnimationObserver.unobserve(node);
+              requestAnimationFrame(() => {
+                requestAnimationFrame(() => node.classList.add("is-animated"));
+              });
+            });
+          }, {threshold: 0.28, rootMargin: "0px 0px -10% 0px"})
+        : null;
+      function animateChart(id) {
+        const node = qs(id);
+        if (!node || !node.querySelector("svg")) return;
+        node.classList.remove("is-animated");
+        if (chartAnimationObserver) {
+          chartAnimationObserver.unobserve(node);
+          chartAnimationObserver.observe(node);
+          return;
+        }
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => node.classList.add("is-animated"));
+        });
       }
       function activeRows() { return filterRows(); }
       function filteredForStatusOverview() { return filterRows({ignoreStatus: true}); }
@@ -1307,7 +1427,7 @@
           renderDurationFromSnapshot(view.duration || []);
           renderBars("provinceChart", (view.provinceTop || []).slice(0, 10), "orders", "province");
           renderDonut("statusChart", view.status || [], "status");
-          renderBars("productChart", (view.productTop || []).slice(0, 10), "items", "productName");
+          renderBars("productChart", [...(view.productTop || [])].sort((a,b) => b.items - a.items).slice(0, 10), "items", "productName");
           return;
         }
         renderHourly(rows);
@@ -1318,7 +1438,7 @@
         renderDuration(filterRows({ignoreFilterKey: "durationBucket"}));
         renderBars("provinceChart", groupRows(filterRows({ignoreFilterKey: "province"}), "province").sort((a,b) => b.orders - a.orders).slice(0, 10), "orders", "province");
         renderStatus();
-        renderBars("productChart", groupRows(filterRows({ignoreFilterKey: "productName"}), r => r.productName || r.productInfo || "-").sort((a,b) => b.items - a.items).slice(0, 10), "items", "productName");
+        renderBars("productChart", groupRows(filterRows({ignoreFilterKey: "productName"}), r => normalizedProductName(r.productName || r.productInfo || "-")).sort((a,b) => b.items - a.items).slice(0, 10), "items", "productName");
       }
       function renderHourly(rows) {
         const grouped = Array.from({length: 24}, (_, hour) => ({label: `${String(hour).padStart(2,"0")}:00`, value: 0}));
@@ -1336,11 +1456,12 @@
         const area = `${left},${h-bottom} ${points} ${w-right},${h-bottom}`;
         qs("hourlyChart").innerHTML = rows.length ? `
           <svg viewBox="0 0 ${w} ${h}" role="img" aria-label="分时出库趋势">
-            <polygon points="${area}" fill="rgba(110,231,210,.16)"></polygon>
-            <polyline points="${points}" fill="none" stroke="#6ee7d2" stroke-width="3"></polyline>
-            ${grouped.map((d,i) => peaks.includes(d.label) ? `<g><circle cx="${x(i)}" cy="${y(d.value)}" r="4" fill="#e8c170"></circle><text x="${x(i)}" y="${y(d.value)-9}" text-anchor="middle" fill="#e8c170" font-size="12">${num(d.value)}</text></g>` : "").join("")}
+            <polygon class="chart-area" points="${area}" fill="rgba(110,231,210,.16)"></polygon>
+            <polyline class="chart-line" style="--line-length: 980" points="${points}" fill="none" stroke="#6ee7d2" stroke-width="3"></polyline>
+            ${grouped.map((d,i) => peaks.includes(d.label) ? `<g class="chart-dot" style="--i:${i}"><circle cx="${x(i)}" cy="${y(d.value)}" r="4" fill="#e8c170"></circle><text x="${x(i)}" y="${y(d.value)-9}" text-anchor="middle" fill="#e8c170" font-size="12">${num(d.value)}</text></g>` : "").join("")}
             ${grouped.filter((_,i) => i % 2 === 0).map((d,i) => `<text class="axis" x="${x(i*2)}" y="${h-8}" text-anchor="middle">${String(i*2).padStart(2,"0")}</text>`).join("")}
           </svg>` : emptyState("当前筛选无分时数据");
+        animateChart("hourlyChart");
       }
       function renderHourlyFromSnapshot(data) {
         const grouped = Array.from({length: 24}, (_, hour) => {
@@ -1358,11 +1479,12 @@
         const area = `${left},${h-bottom} ${points} ${w-right},${h-bottom}`;
         qs("hourlyChart").innerHTML = values.some(Boolean) ? `
           <svg viewBox="0 0 ${w} ${h}" role="img" aria-label="分时出库趋势">
-            <polygon points="${area}" fill="rgba(110,231,210,.16)"></polygon>
-            <polyline points="${points}" fill="none" stroke="#6ee7d2" stroke-width="3"></polyline>
-            ${grouped.map((d,i) => peaks.includes(d.label) ? `<g><circle cx="${x(i)}" cy="${y(d.value)}" r="4" fill="#e8c170"></circle><text x="${x(i)}" y="${y(d.value)-9}" text-anchor="middle" fill="#e8c170" font-size="12">${num(d.value)}</text></g>` : "").join("")}
+            <polygon class="chart-area" points="${area}" fill="rgba(110,231,210,.16)"></polygon>
+            <polyline class="chart-line" style="--line-length: 980" points="${points}" fill="none" stroke="#6ee7d2" stroke-width="3"></polyline>
+            ${grouped.map((d,i) => peaks.includes(d.label) ? `<g class="chart-dot" style="--i:${i}"><circle cx="${x(i)}" cy="${y(d.value)}" r="4" fill="#e8c170"></circle><text x="${x(i)}" y="${y(d.value)-9}" text-anchor="middle" fill="#e8c170" font-size="12">${num(d.value)}</text></g>` : "").join("")}
             ${grouped.filter((_,i) => i % 2 === 0).map((d,i) => `<text class="axis" x="${x(i*2)}" y="${h-8}" text-anchor="middle">${String(i*2).padStart(2,"0")}</text>`).join("")}
           </svg>` : emptyState("当前快照无分时数据");
+        animateChart("hourlyChart");
       }
       function renderBrand(rows) {
         const data = groupRows(rows, "brand").sort((a,b) => b[state.brandMetric] - a[state.brandMetric]);
@@ -1398,22 +1520,25 @@
           const y = h - bottom - bh;
           const labelX = slotCenter;
           const color = colorFor(filterKey, d.label, i);
-          return `<g class="bar-row${chartClass(filterKey, d.label)}" data-key="${filterKey}" data-value="${esc(d.label)}"><rect class="bar-bg" x="${bgX}" y="${top}" width="${bgWidth}" height="${h-top-bottom}" rx="7" fill="rgba(255,255,255,.035)"></rect><rect x="${x}" y="${y}" width="${barWidth}" height="${bh}" rx="7" fill="${color}"></rect><text x="${labelX}" y="${Math.max(top+12,y-7)}" fill="#eef5f1" font-size="12" font-weight="800" text-anchor="middle">${formatMetric(d[metricKey], metricKey)}</text><circle cx="${labelX-24}" cy="${h-32}" r="4" fill="${color}"></circle><text class="axis brand-label" x="${labelX-14}" y="${h-27}" text-anchor="start">${esc(d.label)}</text></g>`;
+          return `<g class="bar-row${chartClass(filterKey, d.label)}" data-key="${filterKey}" data-value="${esc(d.label)}"><rect class="bar-bg" x="${bgX}" y="${top}" width="${bgWidth}" height="${h-top-bottom}" rx="7" fill="rgba(255,255,255,.035)"></rect><rect class="chart-vbar" style="--i:${i}" x="${x}" y="${y}" width="${barWidth}" height="${bh}" rx="7" fill="${color}"></rect><text x="${labelX}" y="${Math.max(top+12,y-7)}" fill="#eef5f1" font-size="12" font-weight="800" text-anchor="middle">${formatMetric(d[metricKey], metricKey)}</text><circle cx="${labelX-24}" cy="${h-32}" r="4" fill="${color}"></circle><text class="axis brand-label" x="${labelX-14}" y="${h-27}" text-anchor="start">${esc(d.label)}</text></g>`;
         }).join("")}</svg>`;
         qs(id).querySelectorAll(".bar-row").forEach(node => node.addEventListener("click", () => applyChartFilter(node.dataset.key, node.dataset.value)));
+        animateChart(id);
       }
       function renderBars(id, data, metricKey, filterKey) {
         if (!data.length) return qs(id).innerHTML = emptyState("当前筛选无数据");
         const total = sum(data, d => d[metricKey]);
         const max = Math.max(...data.map(d => d[metricKey]), 1);
-        const rowH = 24, gap = 11, w = 560, left = 112, right = 96, top = 14, bottom = 22, h = top + bottom + data.length * rowH + Math.max(0, data.length - 1) * gap;
+        const rowH = 24, gap = 11, w = 560, left = filterKey === "productName" ? 190 : 112, right = 96, top = 14, bottom = 22, h = top + bottom + data.length * rowH + Math.max(0, data.length - 1) * gap;
         qs(id).innerHTML = `<svg viewBox="0 0 ${w} ${h}">${data.map((d,i) => {
           const y = top + i * (rowH + gap);
           const bw = (w - left - right) * d[metricKey] / max;
           const color = colorFor(filterKey, d.label, i);
-          return `<g class="bar-row${chartClass(filterKey, d.label)}" data-key="${filterKey}" data-value="${esc(d.label)}"><text x="0" y="${y+16}" fill="#eef5f1" font-size="12">${esc(d.label)}</text><rect class="bar-bg" x="${left}" y="${y}" width="${w-left-right}" height="${rowH}" rx="8" fill="rgba(255,255,255,.04)"></rect><rect x="${left}" y="${y}" width="${Math.max(2,bw)}" height="${rowH}" rx="8" fill="${color}"></rect><text x="${left+bw+8}" y="${y+16}" fill="#c9fff4" font-size="12">${formatMetric(d[metricKey], metricKey)} ${metricKey === "avgDuration" ? "" : pct(d[metricKey], total, 1) + "%"}</text></g>`;
+          const label = filterKey === "productName" ? `${i + 1}. ${shortLabel(normalizedProductName(d.label), 11)}` : shortLabel(d.label, 12);
+          return `<g class="bar-row${chartClass(filterKey, d.label)}" data-key="${filterKey}" data-value="${esc(d.label)}"><title>${esc(d.label)}</title><text x="0" y="${y+16}" fill="#eef5f1" font-size="12">${esc(label)}</text><rect class="bar-bg" x="${left}" y="${y}" width="${w-left-right}" height="${rowH}" rx="8" fill="rgba(255,255,255,.04)"></rect><rect class="chart-bar" style="--i:${i}" x="${left}" y="${y}" width="${Math.max(2,bw)}" height="${rowH}" rx="8" fill="${color}"></rect><text x="${left+bw+8}" y="${y+16}" fill="#c9fff4" font-size="12">${formatMetric(d[metricKey], metricKey)} ${metricKey === "avgDuration" ? "" : pct(d[metricKey], total, 1) + "%"}</text></g>`;
         }).join("")}</svg>`;
         qs(id).querySelectorAll(".bar-row").forEach(node => node.addEventListener("click", () => applyChartFilter(node.dataset.key, node.dataset.value)));
+        animateChart(id);
       }
       function renderDonut(id, data, filterKey) {
         if (!data.length) return qs(id).innerHTML = emptyState("当前筛选无平台数据");
@@ -1424,10 +1549,11 @@
           const span = total ? d.orders / total * 360 : 0;
           const arc = describeArc(cx, cy, r, angle, angle + span);
           angle += span;
-          return `<path d="${arc}" fill="none" stroke="${colorFor(filterKey, d.label, i)}" stroke-width="${stroke}" data-key="${filterKey}" data-value="${esc(d.label)}" class="bar-row${chartClass(filterKey, d.label)}"></path>`;
+          return `<path d="${arc}" fill="none" stroke="${colorFor(filterKey, d.label, i)}" stroke-width="${stroke}" data-key="${filterKey}" data-value="${esc(d.label)}" class="bar-row chart-arc${chartClass(filterKey, d.label)}" style="--i:${i}; --arc-length:${Math.max(12, span * 2.7)}"></path>`;
         }).join("");
         qs(id).innerHTML = `<svg viewBox="0 0 560 260"><g>${arcs}<circle cx="${cx}" cy="${cy}" r="${r-stroke/2}" fill="rgba(3,9,11,.7)"></circle><text x="${cx}" y="${cy-4}" text-anchor="middle" fill="#eef5f1" font-size="24" font-weight="900">${num(total)}</text><text x="${cx}" y="${cy+18}" text-anchor="middle" fill="#8a9a96" font-size="12">订单数</text></g>${data.map((d,i) => `<g class="bar-row${chartClass(filterKey, d.label)}" data-key="${filterKey}" data-value="${esc(d.label)}"><rect x="250" y="${30+i*25}" width="10" height="10" rx="3" fill="${colorFor(filterKey, d.label, i)}"></rect><text x="268" y="${39+i*25}" fill="#eef5f1" font-size="12">${esc(d.label)}</text><text x="438" y="${39+i*25}" fill="#c9fff4" font-size="12" text-anchor="end">${num(d.orders)} / ${pct(d.orders,total,1)}%</text></g>`).join("")}</svg>`;
         qs(id).querySelectorAll(".bar-row").forEach(node => node.addEventListener("click", () => applyChartFilter(node.dataset.key, node.dataset.value)));
+        animateChart(id);
       }
       function describeArc(cx, cy, r, start, end) {
         const s = polar(cx, cy, r, end);

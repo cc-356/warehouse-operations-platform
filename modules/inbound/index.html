@@ -524,6 +524,8 @@
     .brand-metrics strong { display: block; margin-top: 2px; color: var(--ink); font-size: 20px; line-height: 1.05; white-space: nowrap; }
     .two-col { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(340px, .85fr); gap: 18px; align-items: stretch; }
     .three-col { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; align-items: stretch; }
+    .insight-board { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(340px, .85fr); gap: 18px; align-items: start; }
+    .insight-column { min-width: 0; display: grid; gap: 12px; align-content: start; }
     .chart {
       min-height: 220px;
       padding: 12px;
@@ -605,6 +607,71 @@
     .bar-row strong small { color: var(--muted); font-size: 11px; font-weight: 800; }
     .bar-track { height: 9px; border-radius: 999px; overflow: hidden; background: rgba(255,255,255,.055); }
     .bar-fill { height: 100%; border-radius: inherit; background: var(--accent); }
+    .chart-reveal { opacity: 0; transform: translateY(8px); filter: saturate(.86); }
+    .chart-reveal.is-animated { animation: chartSurfaceIn 520ms cubic-bezier(.2,.72,.18,1) forwards; }
+    .chart-reveal.is-animated .bar-fill {
+      transform-origin: left center;
+      animation: chartBarFill 760ms cubic-bezier(.18,.78,.22,1) both;
+      animation-delay: calc(var(--i, 0) * 46ms + 80ms);
+    }
+    .chart-reveal.is-animated .hour-bar,
+    .chart-reveal.is-animated .weekly-bar {
+      transform-box: fill-box;
+      transform-origin: center bottom;
+      animation: chartBarRise 760ms cubic-bezier(.18,.78,.22,1) both;
+      animation-delay: calc(var(--i, 0) * 38ms + 90ms);
+    }
+    .chart-reveal.is-animated .donut-segment {
+      animation: donutSweep 820ms cubic-bezier(.18,.78,.22,1) both;
+      animation-delay: calc(var(--i, 0) * 90ms + 110ms);
+    }
+    .chart-reveal.is-animated .weekly-line {
+      animation: lineDraw 900ms cubic-bezier(.24,.72,.22,1) both;
+      animation-delay: 240ms;
+    }
+    .chart-reveal.is-animated .chart-point,
+    .chart-reveal.is-animated .chart-label,
+    .chart-reveal.is-animated .donut-center,
+    .chart-reveal.is-animated .donut-sub,
+    .chart-reveal.is-animated + .weekly-legend {
+      animation: chartDetailIn 420ms ease both;
+      animation-delay: 620ms;
+    }
+    @keyframes chartSurfaceIn {
+      from { opacity: 0; transform: translateY(8px); filter: saturate(.86); }
+      to { opacity: 1; transform: translateY(0); filter: saturate(1); }
+    }
+    @keyframes chartBarFill {
+      from { transform: scaleX(0); }
+      to { transform: scaleX(1); }
+    }
+    @keyframes chartBarRise {
+      from { transform: scaleY(.04); opacity: .35; }
+      to { transform: scaleY(1); opacity: .86; }
+    }
+    @keyframes donutSweep {
+      from { stroke-dasharray: 0 var(--circumference); stroke-dashoffset: var(--segment-offset); opacity: .42; }
+      to { stroke-dasharray: var(--segment-length) var(--segment-gap); stroke-dashoffset: var(--segment-offset); opacity: 1; }
+    }
+    @keyframes lineDraw {
+      from { stroke-dashoffset: var(--line-length); opacity: .38; }
+      to { stroke-dashoffset: 0; opacity: 1; }
+    }
+    @keyframes chartDetailIn {
+      from { opacity: 0; transform: translateY(3px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .chart-reveal,
+      .chart-reveal.is-animated,
+      .chart-reveal.is-animated *,
+      .chart-reveal.is-animated + .weekly-legend {
+        opacity: 1;
+        transform: none;
+        filter: none;
+        animation: none !important;
+      }
+    }
     .insight-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; }
     .insight-card {
       min-width: 0;
@@ -704,7 +771,7 @@
     .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
     @media (max-width: 1180px) {
       main { gap: 20px; }
-      .two-col, .three-col, .brand-overview, .business-visual { grid-template-columns: 1fr; }
+      .two-col, .three-col, .insight-board, .brand-overview, .business-visual { grid-template-columns: 1fr; }
       .global-filter-grid {
         grid-template-columns: 180px minmax(220px, 1fr) minmax(150px, .7fr) minmax(150px, .75fr);
         grid-template-areas:
@@ -918,34 +985,35 @@
         </section>
       </section>
 
-      <section class="two-col">
-        <section class="panel">
-          <div class="panel-head">
-            <div><span class="panel-label">Compare</span><h2>品牌入库对比</h2></div>
-            <select id="brandCompareMetric">
-              <option value="quantity">入库数量</option>
-              <option value="orders">入库单数</option>
-              <option value="styles">款数</option>
-              <option value="suppliers">供应商数</option>
-            </select>
-          </div>
-          <div class="bars" id="brandCompare"></div>
-        </section>
-        <section class="panel">
-          <div class="panel-head">
-            <div><span class="panel-label">Style</span><h2>款号集中度</h2></div>
-          </div>
-          <div class="style-list" id="styleFocus"></div>
-        </section>
-      </section>
-
-      <section class="two-col">
-        <section class="panel">
-          <div class="panel-head">
-            <div><span class="panel-label">Order</span><h2>入库单结构</h2></div>
-          </div>
-          <div class="insight-grid" id="orderStructure"></div>
-        </section>
+      <section class="insight-board">
+        <div class="insight-column">
+          <section class="panel">
+            <div class="panel-head">
+              <div><span class="panel-label">Compare</span><h2>品牌入库对比</h2></div>
+              <select id="brandCompareMetric">
+                <option value="quantity">入库数量</option>
+                <option value="orders">入库单数</option>
+                <option value="styles">款数</option>
+                <option value="suppliers">供应商数</option>
+              </select>
+            </div>
+            <div class="bars" id="brandCompare"></div>
+          </section>
+          <section class="panel">
+            <div class="panel-head">
+              <div><span class="panel-label">Order</span><h2>入库单结构</h2></div>
+            </div>
+            <div class="insight-grid" id="orderStructure"></div>
+          </section>
+        </div>
+        <div class="insight-column">
+          <section class="panel">
+            <div class="panel-head">
+              <div><span class="panel-label">Style</span><h2>款号集中度</h2></div>
+            </div>
+            <div class="style-list" id="styleFocus"></div>
+          </section>
+        </div>
       </section>
 
       <section class="panel">
