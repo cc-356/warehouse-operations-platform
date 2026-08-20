@@ -31,7 +31,7 @@
     page: 1,
     pageSize: 20,
     issueBrand: "",
-    issueAttribute: issuePayload.summary?.defaultAttribute || "大货问题",
+    issueAttribute: "",
     issueFactory: "",
     issueKeyword: "",
     issuePage: 1,
