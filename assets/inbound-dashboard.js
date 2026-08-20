@@ -1,6 +1,9 @@
 
+
+
 (() => {
   const payload = window.INBOUND_DATA || { days: [], history: [], availableDates: [] };
+  const issuePayload = window.INBOUND_ISSUES || { summary: {}, records: [] };
   const dayLoaders = new Map();
   const params = new URLSearchParams(location.search);
   const brandColors = { "陈陈": "#6ee7d2", "鹭青一": "#9cc7ff", "周淼": "#e8c170", "未识别": "#ffb19b" };
@@ -27,6 +30,12 @@
     calendarMonth: Number((params.get("date") || payload.selectedDate || "").slice(5, 7)) || (new Date().getMonth() + 1),
     page: 1,
     pageSize: 20,
+    issueBrand: "",
+    issueAttribute: issuePayload.summary?.defaultAttribute || "大货问题",
+    issueFactory: "",
+    issueKeyword: "",
+    issuePage: 1,
+    issuePageSize: 5,
     notice: ""
   };
 
@@ -110,7 +119,7 @@
     const dates = datesForCurrentRange();
     if (!dates.length) return;
     const statusNode = $("importStatus");
-    if (statusNode) statusNode.innerHTML = `<span>正在加载 ${dates.length} 天入库明细...</span>`;
+    if (statusNode) statusNode.innerHTML = `<span>???? ${dates.length} ?????...</span>`;
     await Promise.all(dates.map(loadDayRecords));
   }
 
@@ -122,6 +131,22 @@
 
   function filteredRecords() {
     let rows = filterRecords(recordsForDateRange());
+    return rows;
+  }
+
+  function issueRecords() {
+    let rows = [...(issuePayload.records || [])];
+    if (state.issueBrand) rows = rows.filter(row => (row.brand || "未标注") === state.issueBrand);
+    if (state.issueAttribute) rows = rows.filter(row => (row.attribute || "未标注") === state.issueAttribute);
+    if (state.issueFactory) rows = rows.filter(row => (row.factory || "未标注") === state.issueFactory);
+    if (state.issueKeyword) {
+      const keyword = state.issueKeyword.trim();
+      rows = rows.filter(row =>
+        row.factory.includes(keyword) ||
+        row.styleNo.includes(keyword) ||
+        row.defectIssue.includes(keyword)
+      );
+    }
     return rows;
   }
 
@@ -157,10 +182,6 @@
     return { quantity, orders, styles, suppliers, records: records.length, avgPerOrder: orders ? quantity / orders : 0 };
   }
 
-  function groupedSummary(records, key) {
-    return [...by(records, key)].map(([name, rows]) => ({ name, ...summary(rows), rows }));
-  }
-
   function prepareChartReveal(element) {
     element.querySelectorAll(".weekly-line").forEach(line => {
       if (!line.getTotalLength) return;
@@ -191,6 +212,10 @@
       return;
     }
     playChartReveal(element);
+  }
+
+  function groupedSummary(records, key) {
+    return [...by(records, key)].map(([name, rows]) => ({ name, ...summary(rows), rows }));
   }
 
   function renderImportStatus() {
@@ -236,9 +261,7 @@
     for (let day = 1; day <= daysInMonth; day += 1) {
       const dateText = `${monthPrefix}-${String(day).padStart(2, "0")}`;
       const dayData = daysByDate.get(dateText);
-      const sum = dayData
-        ? { ...summary(dayData.records || []), quantity: dayData.quantity ?? summary(dayData.records || []).quantity, records: dayData.recordCount ?? summary(dayData.records || []).records }
-        : null;
+      const sum = dayData ? summary(dayData.records || []) : null;
       const className = `calendar-day${dayData ? " has-data" : ""}${dateText === state.selectedDate ? " active" : ""}`;
       const label = dayData ? `${dateText}，入库数量 ${fmt(sum.quantity)}，明细 ${fmt(sum.records)}` : `${dateText}，无数据`;
       cells.push(dayData
@@ -246,11 +269,7 @@
         : `<span class="${className}" aria-label="${esc(label)}">${day}</span>`);
     }
 
-    const selectedSummary = {
-      ...summary(selectedDay.records || []),
-      quantity: selectedDay.quantity ?? summary(selectedDay.records || []).quantity,
-      records: selectedDay.recordCount ?? summary(selectedDay.records || []).records,
-    };
+    const selectedSummary = summary(selectedDay.records || []);
     container.innerHTML = `
       <div class="calendar-shell">
         <div class="calendar-monthbar">
@@ -392,17 +411,18 @@
           ${options.hideLegend ? "" : `<div class="donut-legend">${emptyLegend}</div>`}
         </div>
       `;
-      queueChartReveal($(id).querySelector(".chart-reveal"));
+      queueChartReveal($(id).querySelector("svg"));
       return;
     }
     const radius = 78;
     const circumference = 2 * Math.PI * radius;
     let offset = 0;
-    const segments = filtered.map(row => {
+    const segments = filtered.map((row, index) => {
       const length = row.value / total * circumference;
       const segment = `
-        <circle cx="100" cy="100" r="${radius}" fill="none" stroke="${row.color || "var(--accent)"}" stroke-width="28"
-          stroke-dasharray="${length} ${circumference - length}" stroke-dashoffset="${-offset}" transform="rotate(-90 100 100)">
+        <circle class="donut-segment" cx="100" cy="100" r="${radius}" fill="none" stroke="${row.color || "var(--accent)"}" stroke-width="28"
+          stroke-dasharray="${length} ${circumference - length}" stroke-dashoffset="${-offset}" transform="rotate(-90 100 100)"
+          style="--i:${index};--circumference:${circumference};--segment-length:${length};--segment-gap:${circumference - length};--segment-offset:${-offset}">
           <title>${esc(row.name)} ${fmt(row.value)}，占比 ${pct(row.value, total)}</title>
         </circle>`;
       offset += length;
@@ -428,7 +448,7 @@
         ${options.hideLegend ? "" : `<div class="donut-legend">${legend}</div>`}
       </div>
     `;
-    queueChartReveal($(id).querySelector(".chart-reveal"));
+    queueChartReveal($(id).querySelector("svg"));
   }
 
   function renderHourlyTrend(records) {
@@ -441,21 +461,29 @@
     }
     const max = Math.max(1, ...buckets.map(item => item.value));
     const peak = buckets.reduce((best, item) => item.value > best.value ? item : best, buckets[0]);
+    const valueTextStyle = 'paint-order:stroke;stroke:#10242b;stroke-width:5px;stroke-linejoin:round;';
+    const hourlyLayout = buckets.map((item, index) => {
+      const width = 18;
+      const x = 48 + index * 29;
+      const height = Math.max(2, item.value / max * 136);
+      const y = 176 - height;
+      const color = item.hour === peak.hour ? "var(--warn)" : "var(--accent)";
+      const labelText = fmt(item.value);
+      const peakLabelY = Math.max(18, y - 8);
+      return { ...item, x, y, width, height, color, labelText, peakLabelY };
+    });
     $("hourlyTrend").innerHTML = `
-      <svg class="chart-reveal" viewBox="0 0 760 260" role="img" aria-label="分时入库趋势" style="width:100%;height:260px;display:block">
-        <line x1="44" y1="216" x2="736" y2="216" stroke="rgba(210,235,225,.18)" />
-        ${buckets.map((item, index) => {
-          const width = 20;
-          const x = 48 + index * 29;
-          const height = Math.max(2, item.value / max * 170);
-          const y = 216 - height;
-          const color = item.hour === peak.hour ? "var(--warn)" : "var(--accent)";
-          return `<g><rect class="hour-bar" data-hour="${item.hour}" style="--i:${index}" x="${x}" y="${y}" width="${width}" height="${height}" rx="4" fill="${color}" opacity=".86"><title>${item.hour}:00 入库数量 ${item.quantity}，入库单 ${item.orders}，款数 ${item.styles}</title></rect>${index % 2 === 0 ? `<text class="chart-label" x="${x + 10}" y="238" text-anchor="middle" fill="#8a9a96" font-size="10">${item.hour}</text>` : ""}</g>`;
+      <svg class="chart-reveal" viewBox="0 0 760 232" role="img" aria-label="分时入库趋势" style="width:100%;height:232px;display:block">
+        <line x1="44" y1="176" x2="736" y2="176" stroke="rgba(210,235,225,.18)" />
+        ${hourlyLayout.map((item, index) => {
+          const peakLabel = item.value > 0 && item.hour === peak.hour ? `<text x="${item.x + 10}" y="${item.peakLabelY}" text-anchor="middle" fill="#ffe1d6" font-size="10" font-weight="700" style="${valueTextStyle}">${item.labelText}</text>` : "";
+          const valueTick = item.value > 0 ? `<text x="${item.x + 9}" y="214" text-anchor="middle" fill="${item.hour === peak.hour ? "#ffe1d6" : "#d7fff7"}" font-size="9" font-weight="700">${item.labelText}</text>` : "";
+          return `<g><rect class="hour-bar" data-hour="${item.hour}" x="${item.x}" y="${item.y}" width="${item.width}" height="${item.height}" rx="4" fill="${item.color}" opacity=".86" style="--i:${index}"><title>${item.hour}:00 入库数量 ${item.quantity}，入库单 ${item.orders}，款数 ${item.styles}</title></rect>${peakLabel}<text class="chart-label" x="${item.x + 9}" y="198" text-anchor="middle" fill="#8a9a96" font-size="10">${item.hour}</text>${valueTick}</g>`;
         }).join("")}
       </svg>
       <p class="muted">峰值时段：${peak.hour}:00，${metricName(state.trendMetric)} ${fmt(peak.value)}。点击柱形可联动筛选明细。</p>
     `;
-    queueChartReveal($("hourlyTrend").querySelector(".chart-reveal"));
+    queueChartReveal($("hourlyTrend").querySelector("svg"));
   }
 
   function metricName(metric) {
@@ -488,7 +516,8 @@
   }
 
   function renderWeeklyTrend() {
-    const dates = weeklyTrendDates();
+    const selectedIndex = Math.max(0, payload.availableDates.indexOf(state.selectedDate));
+    const dates = payload.availableDates.slice(selectedIndex, selectedIndex + 7).reverse();
     const buckets = dates.map(date => {
       const day = dayByDate(date);
       const rows = filterRecords(day.records || []);
@@ -497,44 +526,60 @@
     });
     const maxQuantity = Math.max(1, ...buckets.map(item => item.quantity));
     const maxOrders = Math.max(1, ...buckets.map(item => item.orders));
-    const chartLeft = 84;
+    const chartLeft = 68;
     const chartRight = 724;
-    const chartTop = 26;
-    const chartBottom = 232;
+    const chartTop = 22;
+    const chartBottom = 166;
     const chartWidth = chartRight - chartLeft;
     const chartHeight = chartBottom - chartTop;
     const step = buckets.length > 1 ? chartWidth / (buckets.length - 1) : chartWidth;
-    const barWidth = Math.min(54, Math.max(24, step * 0.42));
+    const barWidth = Math.min(40, Math.max(20, step * 0.36));
     const points = buckets.map((item, index) => {
       const x = buckets.length > 1 ? chartLeft + index * step : chartLeft + chartWidth / 2;
-      const y = chartBottom - (item.orders / maxOrders) * chartHeight;
-      return { ...item, x, y };
+      const lineY = chartBottom - (item.orders / maxOrders) * chartHeight;
+      const barHeight = Math.max(2, item.quantity / maxQuantity * chartHeight);
+      const barY = chartBottom - barHeight;
+      return { ...item, x, lineY, barHeight, barY };
     });
     const total = {
       quantity: buckets.reduce((sum, item) => sum + item.quantity, 0),
       orders: buckets.reduce((sum, item) => sum + item.orders, 0)
     };
     $("weeklyTrend").innerHTML = buckets.length ? `
-      <svg class="chart-reveal" viewBox="0 0 780 300" role="img" aria-label="近7日入库数量和入库单数趋势">
+      <svg class="chart-reveal" viewBox="0 0 780 224" role="img" aria-label="近7日入库数量和入库单数趋势">
         <line x1="${chartLeft}" y1="${chartBottom}" x2="${chartRight}" y2="${chartBottom}" stroke="rgba(210,235,225,.18)" />
-        <line x1="${chartLeft}" y1="${chartTop}" x2="${chartLeft}" y2="${chartBottom}" stroke="rgba(210,235,225,.12)" />
-        ${[0, .25, .5, .75, 1].map(rate => {
+        ${[0, .5, 1].map(rate => {
           const y = chartBottom - rate * chartHeight;
-          return `<line x1="${chartLeft}" y1="${y}" x2="${chartRight}" y2="${y}" stroke="rgba(210,235,225,.07)" /><text x="${chartLeft - 36}" y="${y + 4}" text-anchor="end" fill="#8a9a96" font-size="10">${fmt(Math.round(maxQuantity * rate))}</text>`;
+          return `<line x1="${chartLeft}" y1="${y}" x2="${chartRight}" y2="${y}" stroke="rgba(210,235,225,.07)" /><text x="${chartLeft - 18}" y="${y + 4}" text-anchor="end" fill="#8a9a96" font-size="9">${fmt(Math.round(maxQuantity * rate))}</text>`;
         }).join("")}
-        ${buckets.map((item, index) => {
-          const x = buckets.length > 1 ? chartLeft + index * step : chartLeft + chartWidth / 2;
-          const height = Math.max(2, (item.quantity / maxQuantity) * chartHeight);
-          const y = chartBottom - height;
-          return `<g class="week-group" data-week-date="${esc(item.date)}">
-            <rect class="weekly-bar" style="--i:${index}" x="${x - barWidth / 2}" y="${y}" width="${barWidth}" height="${height}" rx="6" fill="var(--accent)" opacity=".78">
+        ${points.map((item, index) => `
+          <g data-week-date="${esc(item.date)}">
+            <rect class="weekly-bar" x="${item.x - barWidth / 2}" y="${item.barY}" width="${barWidth}" height="${item.barHeight}" rx="6" fill="var(--accent)" opacity=".78" style="--i:${index}">
               <title>${esc(item.date)} 入库数量 ${fmt(item.quantity)}，入库单 ${fmt(item.orders)}，款数 ${fmt(item.styles)}</title>
             </rect>
-            <text class="chart-label" x="${x}" y="264" text-anchor="middle" fill="#8a9a96" font-size="11">${esc(item.date.slice(5))}</text>
-          </g>`;
+            <text class="chart-label" x="${item.x}" y="198" text-anchor="middle" fill="#8a9a96" font-size="10">${esc(item.date.slice(5))}</text>
+          </g>
+        `).join("")}
+        <polyline class="weekly-line" points="${points.map(item => `${item.x},${item.lineY}`).join(" ")}" fill="none" stroke="var(--warn)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+        ${points.map(item => `<circle class="chart-point" cx="${item.x}" cy="${item.lineY}" r="4" fill="var(--warn)" stroke="#071012" stroke-width="2" />`).join("")}
+        ${points.map(item => {
+          let qtyY = Math.min(chartBottom - 9, item.barY + 22);
+          let orderY = Math.max(13, item.lineY - 18);
+          if (Math.abs(qtyY - orderY) < 24) {
+            if (item.barHeight > 48) {
+              qtyY = Math.min(chartBottom - 9, orderY + 24);
+            } else {
+              orderY = Math.max(13, qtyY - 24);
+            }
+          }
+          return `
+            <g class="chart-label">
+              <rect class="weekly-label-bg" x="${item.x - 22}" y="${qtyY - 12}" width="44" height="17" rx="8"></rect>
+              <text class="weekly-qty-text" x="${item.x}" y="${qtyY}">${fmt(item.quantity)}</text>
+              <rect class="weekly-label-bg" x="${item.x - 17}" y="${orderY - 11}" width="34" height="16" rx="8"></rect>
+              <text class="weekly-order-text" x="${item.x}" y="${orderY}">${fmt(item.orders)}</text>
+            </g>`;
         }).join("")}
-        <polyline class="weekly-line" points="${points.map(item => `${item.x},${item.y}`).join(" ")}" fill="none" stroke="var(--warn)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
-        ${points.map((item, index) => `<circle class="chart-point" style="--i:${index}" cx="${item.x}" cy="${item.y}" r="5" fill="var(--warn)" stroke="#071012" stroke-width="2"><title>${esc(item.date)} 入库单 ${fmt(item.orders)}</title></circle>`).join("")}
       </svg>
       <div class="weekly-legend">
         <span><span class="legend-dot" style="background:var(--accent)"></span>柱：入库数量</span>
@@ -542,7 +587,7 @@
         <span>近7日合计：${fmt(total.quantity)} 件 / ${fmt(total.orders)} 单</span>
       </div>
     ` : `<p class="muted">暂无近7日数据</p>`;
-    queueChartReveal($("weeklyTrend").querySelector(".chart-reveal"));
+    queueChartReveal($("weeklyTrend").querySelector("svg"));
   }
 
   function renderMatrix(records) {
@@ -556,20 +601,90 @@
     `;
   }
 
-  function renderQuality(day) {
-    const records = day.records || [];
-    const counts = {
-      "无法识别品牌": records.filter(row => row.brand === "未识别").length,
-      "未标注业务类型": records.filter(row => row.businessType === "未标注").length,
-      "缺少入库单号": records.filter(row => !row.inboundOrderNo).length,
-      "缺少款号": records.filter(row => !row.styleNo).length,
-      "数量异常或非数字": records.filter(row => row.warnings.includes("数量异常或非数字")).length,
-      "工厂字段格式不规范": records.filter(row => row.warnings.includes("工厂字段格式不规范")).length
-    };
-    const qualitySummary = $("qualitySummary");
-    if (qualitySummary) {
-      qualitySummary.innerHTML = Object.entries(counts).map(([label, count]) => `<div class="quality-line"><span>${label}</span><strong>${fmt(count)}</strong></div>`).join("");
-    }
+  function orderGroups(records) {
+    return groupedSummary(records.filter(row => row.inboundOrderNo), "inboundOrderNo")
+      .map(item => ({
+        ...item,
+        brands: uniq(item.rows.map(row => row.brand)).filter(brand => brand !== "未识别"),
+        suppliers: uniq(item.rows.map(row => row.supplier)),
+        businessTypes: uniq(item.rows.map(row => row.businessType))
+      }));
+  }
+
+  function renderStyleFocus(records) {
+    const total = summary(records).quantity;
+    const rows = groupedSummary(records, "styleNo")
+      .filter(item => item.name)
+      .map(item => ({
+        ...item,
+        brands: uniq(item.rows.map(row => row.brand)).filter(brand => brand !== "未识别"),
+        suppliers: uniq(item.rows.map(row => row.supplier)),
+        businessTypes: uniq(item.rows.map(row => row.businessType))
+      }))
+      .sort((a, b) => b.quantity - a.quantity || b.orders - a.orders)
+      .slice(0, 8);
+    $("styleFocus").innerHTML = rows.length ? rows.map(item => `
+      <div class="style-row">
+        <button class="link-cell" type="button" data-style="${esc(item.name)}">${esc(item.name)}</button>
+        <div class="style-meta">
+          ${item.brands.map(brand => `<span class="tag">${esc(brand)}</span>`).join("")}
+          <span class="tag">${fmt(item.orders)} 单</span>
+          <span class="tag">${fmt(item.suppliers.length)} 供应商</span>
+        </div>
+        <strong>${fmt(item.quantity)} <small>${pct(item.quantity, total)}</small></strong>
+      </div>
+    `).join("") : `<p class="muted">当前条件下暂无款号数据。</p>`;
+  }
+
+  function renderOrderStructure(records) {
+    const orders = orderGroups(records);
+    const totalQty = orders.reduce((sum, item) => sum + item.quantity, 0);
+    const buckets = [
+      { label: "20件及以下", rows: orders.filter(item => item.quantity <= 20) },
+      { label: "21-50件", rows: orders.filter(item => item.quantity > 20 && item.quantity <= 50) },
+      { label: "51-100件", rows: orders.filter(item => item.quantity > 50 && item.quantity <= 100) },
+      { label: "100件以上", rows: orders.filter(item => item.quantity > 100) }
+    ];
+    const maxOrder = orders.reduce((best, item) => item.quantity > (best.quantity || 0) ? item : best, {});
+    const multiStyle = orders.filter(item => item.styles > 1);
+    const avgQty = orders.length ? totalQty / orders.length : 0;
+    const cards = [
+      { label: "平均单量", value: avgQty.toFixed(1), note: `${fmt(orders.length)} 个入库单，合计 ${fmt(totalQty)} 件` },
+      { label: "多款入库单", value: fmt(multiStyle.length), note: `占入库单 ${pct(multiStyle.length, orders.length)}` },
+      { label: "最大入库单", value: fmt(maxOrder.quantity || 0), note: maxOrder.name ? `${esc(maxOrder.name)}｜${fmt(maxOrder.styles)} 款` : "-" }
+    ];
+    const bucketRows = buckets.map(item => {
+      const quantity = item.rows.reduce((sum, row) => sum + row.quantity, 0);
+      return `<div class="quality-line"><span>${item.label}</span><strong>${fmt(item.rows.length)} 单 · ${fmt(quantity)} 件</strong></div>`;
+    }).join("");
+    $("orderStructure").innerHTML = cards.map(item => `
+      <div class="insight-card"><span>${item.label}</span><strong>${item.value}</strong><small>${item.note}</small></div>
+    `).join("") + `<div class="insight-card" style="grid-column:1/-1"><span>单量区间</span>${bucketRows}</div>`;
+  }
+
+  function renderSupplierCoverage(records) {
+    const rows = groupedSummary(records, "supplier")
+      .map(item => {
+        const times = item.rows.map(row => row.warehouseTime).filter(Boolean).sort();
+        return {
+          ...item,
+          brands: uniq(item.rows.map(row => row.brand)).filter(brand => brand !== "未识别"),
+          businessTypes: uniq(item.rows.map(row => row.businessType)),
+          firstTime: times[0] || "-",
+          lastTime: times[times.length - 1] || "-"
+        };
+      })
+      .sort((a, b) => b.quantity - a.quantity || b.orders - a.orders)
+      .slice(0, 12);
+    $("supplierCoverageBody").innerHTML = rows.length ? rows.map(item => `
+      <tr>
+        <td><button class="link-cell" type="button" data-supplier="${esc(item.name)}">${esc(item.name)}</button></td>
+        <td>${item.brands.map(brand => `<span class="tag">${esc(brand)}</span>`).join(" ") || "-"}</td>
+        <td>${item.businessTypes.map(type => `<span class="tag">${esc(type)}</span>`).join(" ") || "-"}</td>
+        <td>${fmt(item.quantity)}</td><td>${fmt(item.orders)}</td><td>${fmt(item.styles)}</td>
+        <td>${esc(item.firstTime)}</td><td>${esc(item.lastTime)}</td>
+      </tr>
+    `).join("") : `<tr class="empty-row"><td colspan="8">当前条件下暂无供应商覆盖数据。</td></tr>`;
   }
 
   function renderSuppliers(records) {
@@ -609,10 +724,20 @@
         brands: uniq(item.rows.map(row => row.brand)).filter(brand => brand !== "未识别")
       }))
       .sort((a, b) => b.quantity - a.quantity);
-    $("supplierOptions").innerHTML = supplierRows.map(item => `
-      <option value="${esc(item.name)}" label="${esc(item.name)}｜${esc(item.brands.join("、") || "-")}｜${fmt(item.quantity)}件"></option>
-    `).join("");
     $("supplierSearch").value = state.supplier;
+    const query = state.supplier.trim();
+    const visibleRows = supplierRows
+      .filter(item => !query || item.name.includes(query) || item.brands.join("、").includes(query))
+      .slice(0, 30);
+    $("supplierSuggestions").innerHTML = visibleRows.length ? visibleRows.map(item => `
+      <button class="supplier-suggestion" type="button" role="option" data-supplier="${esc(item.name)}">
+        <strong>${esc(item.name)}</strong>
+        <span>${esc(item.brands.join("、") || "-")} ｜ ${fmt(item.quantity)}件</span>
+      </button>
+    `).join("") : `<div class="supplier-suggestion-empty">没有匹配的供应商</div>`;
+    const showSuggestions = document.activeElement === $("supplierSearch");
+    $("supplierSuggestions").classList.toggle("open", showSuggestions);
+    $("supplierSearch").setAttribute("aria-expanded", showSuggestions ? "true" : "false");
 
     $("businessFilter").innerHTML = `<option value="">全部业务类型</option>${businessTypes.map(type => `<option value="${type}">${type}</option>`).join("")}`;
     $("businessFilter").value = state.businessType;
@@ -645,6 +770,72 @@
     $("pagerInfo").textContent = `第 ${state.page} / ${pageCount} 页，共 ${fmt(rows.length)} 条`;
   }
 
+  function renderIssuePanel() {
+    const records = issueRecords();
+    const pageCount = Math.max(1, Math.ceil(records.length / state.issuePageSize));
+    if (state.issuePage > pageCount) state.issuePage = pageCount;
+    const pageRows = records.slice((state.issuePage - 1) * state.issuePageSize, state.issuePage * state.issuePageSize);
+    const all = issuePayload.records || [];
+    const brands = uniq(all.map(row => row.brand || "未标注"));
+    const brandRows = all.filter(row => !state.issueBrand || (row.brand || "未标注") === state.issueBrand);
+    const attributes = uniq(brandRows.map(row => row.attribute || "未标注"));
+    const factories = uniq(all
+      .filter(row => !state.issueBrand || (row.brand || "未标注") === state.issueBrand)
+      .filter(row => !state.issueAttribute || row.attribute === state.issueAttribute)
+      .map(row => row.factory || "未标注"));
+    const imageCount = records.reduce((sum, row) => sum + (row.images || []).length, 0);
+    const styleCount = uniq(records.map(row => row.styleNo)).length;
+    const factoryCount = uniq(records.map(row => row.factory)).length;
+
+    $("issueSummary").innerHTML = `
+      <div class="issue-metric"><span>问题记录</span><strong>${fmt(records.length)}</strong></div>
+      <div class="issue-metric"><span>涉及工厂</span><strong>${fmt(factoryCount)}</strong></div>
+      <div class="issue-metric"><span>涉及款号</span><strong>${fmt(styleCount)}</strong></div>
+      <div class="issue-metric"><span>问题图片</span><strong>${fmt(imageCount)}</strong></div>
+    `;
+    $("issueBrand").innerHTML = `<option value="">全部品牌</option>${brands.map(item => `<option value="${esc(item)}">${esc(item)}</option>`).join("")}`;
+    $("issueBrand").value = state.issueBrand;
+    $("issueAttribute").innerHTML = `<option value="">全部属性</option>${attributes.map(item => `<option value="${esc(item)}">${esc(item)}</option>`).join("")}`;
+    $("issueAttribute").value = state.issueAttribute;
+    $("issueFactory").innerHTML = `<option value="">全部工厂</option>${factories.map(item => `<option value="${esc(item)}">${esc(item)}</option>`).join("")}`;
+    $("issueFactory").value = state.issueFactory;
+    $("issueKeyword").value = state.issueKeyword;
+    $("issuePageSize").value = String(state.issuePageSize);
+
+    $("issueBody").innerHTML = pageRows.length ? pageRows.map(row => {
+      const images = (row.images || []).slice(0, 4);
+      const extra = Math.max(0, (row.images || []).length - images.length);
+      return `
+        <article class="issue-card">
+          <div class="issue-card-main">
+            <div class="issue-card-title">
+              <strong>${esc(row.factory || "未标注工厂")}</strong>
+              <span>${esc(row.date)}</span>
+            </div>
+            <div class="issue-tags">
+              <span>${esc(row.brand || "陈陈")}</span>
+              <span>${esc(row.attribute || "未标注")}</span>
+              ${(row.responsibleParties || []).map(item => `<span>${esc(item)}</span>`).join("")}
+            </div>
+            <div class="issue-style">${esc(row.styleNo || "-")}</div>
+            <p class="issue-defect"><span>瑕疵问题</span>${esc(row.defectIssue || "-")}</p>
+          </div>
+          <div class="issue-images">
+            ${images.map((image, index) => image.relativePath ? `
+              <button class="issue-image-button" type="button" data-issue-record="${esc(row.recordId)}" data-issue-image="${esc(image.relativePath)}" data-issue-title="${esc(`${row.factory} ${row.styleNo}`)}">
+                <img src="${esc(image.relativePath)}" alt="${esc(row.defectIssue || "问题图片")}" loading="lazy" />
+              </button>
+            ` : `<span class="issue-image-missing">${esc(image.name || `图片${index + 1}`)}</span>`).join("")}
+            ${extra ? `<button class="issue-image-more" type="button" data-issue-record="${esc(row.recordId)}" data-issue-title="${esc(`${row.factory} ${row.styleNo}`)}">+${fmt(extra)}</button>` : ""}
+          </div>
+        </article>
+      `;
+    }).join("") : `<div class="empty-state">当前条件下没有问题记录。</div>`;
+    $("issuePagerInfo").textContent = `第 ${state.issuePage} / ${pageCount} 页，共 ${fmt(records.length)} 条`;
+    $("issuePrevPage").disabled = state.issuePage <= 1;
+    $("issueNextPage").disabled = state.issuePage >= pageCount;
+  }
+
   function openOrder(orderNo) {
     const records = filteredRecords().filter(row => row.inboundOrderNo === orderNo);
     const data = summary(records);
@@ -661,11 +852,37 @@
     showDrawer("orderDrawer");
   }
 
-  function openQuality() {
-    const day = currentDay();
-    const warnings = (day.warnings || []).filter(item => item.type !== "skipped-total-row");
-    $("qualityContent").innerHTML = warnings.length ? `<div class="drawer-list">${warnings.map(item => `<div class="drawer-item">第 ${item.rowNumber} 行 · ${esc(item.type)}<br><span class="muted">${esc((item.raw || []).join(" | "))}</span></div>`).join("")}</div>` : `<p class="muted">当前日期没有需要排查的数据质量警告。</p>`;
-    showDrawer("qualityDrawer");
+  function openIssueImages(recordId, fallbackImage, fallbackTitle) {
+    const record = (issuePayload.records || []).find(item => item.recordId === recordId);
+    const images = (record?.images || []).filter(image => image.relativePath);
+    const title = `${record?.factory || ""} ${record?.styleNo || ""}`.trim() || fallbackTitle || "问题图片";
+    $("drawerTitle").textContent = title;
+    if (images.length > 1) {
+      $("drawerContent").innerHTML = `<div class="issue-drawer-grid">${images.map(image => `
+        <button type="button" data-drawer-image="${esc(image.relativePath)}" data-drawer-title="${esc(title)}" data-drawer-record="${esc(recordId)}">
+          <img src="${esc(image.relativePath)}" alt="${esc(record?.defectIssue || image.name || "问题图片")}" loading="lazy" />
+        </button>
+      `).join("")}</div>`;
+    } else {
+      const imagePath = images[0]?.relativePath || fallbackImage;
+      $("drawerContent").innerHTML = imagePath
+        ? `<img class="issue-drawer-image" src="${esc(imagePath)}" alt="${esc(title)}" />`
+        : `<div class="empty-state">这条记录没有可预览的图片。</div>`;
+    }
+    $("drawerBackdrop").classList.add("open");
+    $("orderDrawer").classList.add("open");
+    $("orderDrawer").setAttribute("aria-hidden", "false");
+  }
+
+  function openIssueImage(imagePath, title, returnRecordId = "") {
+    $("drawerTitle").textContent = title || "问题图片";
+    const imageMarkup = `<img class="issue-drawer-image" src="${esc(imagePath)}" alt="${esc(title || "问题图片")}" />`;
+    $("drawerContent").innerHTML = returnRecordId
+      ? `<button type="button" class="issue-single-image-button" data-return-issue-record="${esc(returnRecordId)}" data-drawer-title="${esc(title || "问题图片")}">${imageMarkup}</button>`
+      : imageMarkup;
+    $("drawerBackdrop").classList.add("open");
+    $("orderDrawer").classList.add("open");
+    $("orderDrawer").setAttribute("aria-hidden", "false");
   }
 
   function showDrawer(id) {
@@ -676,7 +893,7 @@
 
   function closeDrawers() {
     $("drawerBackdrop").classList.remove("open");
-    ["orderDrawer", "qualityDrawer"].forEach(id => {
+    ["orderDrawer"].forEach(id => {
       $(id).classList.remove("open");
       $(id).setAttribute("aria-hidden", "true");
     });
@@ -735,9 +952,12 @@
     renderBrandCompare(rows);
     renderBusiness(rows);
     renderMatrix(rows);
-    renderQuality(day);
+    renderStyleFocus(rows);
+    renderOrderStructure(rows);
+    renderSupplierCoverage(rows);
     renderSuppliers(rows);
     renderDetails(rows);
+    renderIssuePanel();
     ensureWeeklyTrendRecords().then(() => {
       if (token === renderToken) renderWeeklyTrend();
     });
@@ -791,6 +1011,27 @@
       state.page = 1;
       render();
     });
+    $("supplierSearch").addEventListener("focus", () => render());
+    $("supplierSuggestions").addEventListener("mousedown", event => {
+      const button = event.target.closest("[data-supplier]");
+      if (!button) return;
+      event.preventDefault();
+      state.notice = "";
+      state.supplier = button.dataset.supplier;
+      const supplierRows = recordsForDateRange().filter(row => row.supplier === state.supplier);
+      const supplierBrands = uniq(supplierRows.map(row => row.brand)).filter(Boolean);
+      if (!state.brand && supplierBrands.length === 1) state.brand = supplierBrands[0];
+      state.page = 1;
+      render();
+      $("supplierSearch").blur();
+      $("supplierSuggestions").classList.remove("open");
+      $("supplierSearch").setAttribute("aria-expanded", "false");
+    });
+    document.addEventListener("mousedown", event => {
+      if (event.target.closest(".supplier-combobox")) return;
+      $("supplierSuggestions").classList.remove("open");
+      $("supplierSearch").setAttribute("aria-expanded", "false");
+    });
     $("allBrands").addEventListener("click", () => { state.notice = ""; state.brand = ""; state.page = 1; render(); });
     $("brandCards").addEventListener("click", event => {
       const card = event.target.closest("[data-brand]");
@@ -810,6 +1051,25 @@
       state.notice = "";
       state.supplier = target.dataset.supplier;
       $("supplierSearch").value = state.supplier;
+      state.page = 1;
+      render();
+      $("detailBody").scrollIntoView({ behavior: "smooth", block: "nearest" });
+    });
+    $("supplierCoverageBody").addEventListener("click", event => {
+      const target = event.target.closest("[data-supplier]");
+      if (!target) return;
+      state.notice = "";
+      state.supplier = target.dataset.supplier;
+      $("supplierSearch").value = state.supplier;
+      state.page = 1;
+      render();
+      $("detailBody").scrollIntoView({ behavior: "smooth", block: "nearest" });
+    });
+    $("styleFocus").addEventListener("click", event => {
+      const target = event.target.closest("[data-style]");
+      if (!target) return;
+      state.notice = "";
+      state.keyword = target.dataset.style;
       state.page = 1;
       render();
       $("detailBody").scrollIntoView({ behavior: "smooth", block: "nearest" });
@@ -834,6 +1094,31 @@
     });
     $("keyword").addEventListener("input", event => { state.notice = ""; state.keyword = event.target.value; state.page = 1; render(); });
     $("businessFilter").addEventListener("change", event => { state.notice = ""; state.businessType = event.target.value; state.page = 1; render(); });
+    $("issueBrand").addEventListener("change", event => { state.issueBrand = event.target.value; state.issueFactory = ""; state.issuePage = 1; render(); });
+    $("issueAttribute").addEventListener("change", event => { state.issueAttribute = event.target.value; state.issueFactory = ""; state.issuePage = 1; render(); });
+    $("issueFactory").addEventListener("change", event => { state.issueFactory = event.target.value; state.issuePage = 1; render(); });
+    $("issueKeyword").addEventListener("input", event => { state.issueKeyword = event.target.value.trim(); state.issuePage = 1; render(); });
+    $("issuePageSize").addEventListener("change", event => { state.issuePageSize = Number(event.target.value) || 5; state.issuePage = 1; render(); });
+    $("issueClearFilters").addEventListener("click", () => {
+      state.issueBrand = "";
+      state.issueAttribute = "";
+      state.issueFactory = "";
+      state.issueKeyword = "";
+      state.issuePageSize = 5;
+      state.issuePage = 1;
+      render();
+    });
+    $("issuePrevPage").addEventListener("click", () => { state.issuePage = Math.max(1, state.issuePage - 1); render(); });
+    $("issueNextPage").addEventListener("click", () => { state.issuePage += 1; render(); });
+    $("issueBody").addEventListener("click", event => {
+      const target = event.target.closest("[data-issue-record], [data-issue-image]");
+      if (!target) return;
+      if (target.classList.contains("issue-image-more")) {
+        openIssueImages(target.dataset.issueRecord, target.dataset.issueImage, target.dataset.issueTitle);
+      } else {
+        openIssueImage(target.dataset.issueImage, target.dataset.issueTitle);
+      }
+    });
     $("activeFilters").addEventListener("click", event => {
       const button = event.target.closest("[data-clear-filter]");
       if (!button) return;
@@ -878,13 +1163,22 @@
     });
     $("prevPage").addEventListener("click", () => { state.page = Math.max(1, state.page - 1); render(); });
     $("nextPage").addEventListener("click", () => { state.page += 1; render(); });
-    $("qualityButton")?.addEventListener("click", openQuality);
-    $("exportButton")?.addEventListener("click", () => exportCsv(filteredRecords()));
-    $("importButton")?.addEventListener("click", () => alert(`当前静态版本已读取数据文件：${currentDay().sourceFile}`));
-    $("drawerBackdrop")?.addEventListener("click", closeDrawers);
+    $("exportButton").addEventListener("click", () => exportCsv(filteredRecords()));
+    $("drawerBackdrop").addEventListener("click", closeDrawers);
     document.querySelectorAll("[data-close-drawer]").forEach(button => button.addEventListener("click", closeDrawers));
+    $("drawerContent").addEventListener("click", event => {
+      const returnTarget = event.target.closest("[data-return-issue-record]");
+      if (returnTarget) {
+        openIssueImages(returnTarget.dataset.returnIssueRecord, "", returnTarget.dataset.drawerTitle);
+        return;
+      }
+      const target = event.target.closest("[data-drawer-image]");
+      if (!target) return;
+      openIssueImage(target.dataset.drawerImage, target.dataset.drawerTitle, target.dataset.drawerRecord);
+    });
   }
 
   bindEvents();
   render();
 })();
+

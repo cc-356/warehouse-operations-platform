@@ -15,7 +15,7 @@
     ["返修", "返修质检"],
     ["异常件", "异常件质检"]
   ];
-  const anomalyExcludedWorkers = new Set(["冯建豪", "肖林", "曹远清", "王子民", "杨金玲"]);
+  const anomalyExcludedWorkers = new Set(["冯建豪", "肖林", "曹远清", "王子民", "杨金玲", "何建珍", "尤佳辉"]);
   const efficiencyExcludedWorkers = new Set(["杨金玲", "刘志文", "肖林", "冯建豪"]);
   let groupCardTimer = null;
   const state = {

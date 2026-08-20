@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>仓库运营管理平台 - 入库管理</title>
+  <title>仓储运营管理平台 - 入库管理</title>
   <style>
     :root {
       --bg: #070b0d;
@@ -259,6 +259,55 @@
     .global-filter-grid .business-field { grid-area: business; }
     .global-filter-grid .search-field { grid-area: keyword; }
     .global-filter-grid .supplier-field { min-width: 0; }
+    .supplier-combobox { position: relative; min-width: 0; }
+    .supplier-suggestions {
+      position: absolute;
+      z-index: 80;
+      top: calc(100% + 8px);
+      right: 0;
+      width: max(100%, 420px);
+      max-width: calc(100vw - 28px);
+      max-height: 420px;
+      overflow: auto;
+      padding: 8px;
+      border: 1px solid rgba(110,231,210,.22);
+      border-radius: 10px;
+      background: #0b1113;
+      box-shadow: 0 22px 58px rgba(0,0,0,.32);
+      display: none;
+    }
+    .supplier-suggestions.open { display: grid; gap: 6px; }
+    .supplier-suggestion {
+      width: 100%;
+      min-height: 58px;
+      padding: 10px 12px;
+      border: 1px solid rgba(110,231,210,.14);
+      border-radius: 8px;
+      background: rgba(255,255,255,.04);
+      color: var(--ink);
+      display: grid;
+      gap: 4px;
+      text-align: left;
+      cursor: pointer;
+    }
+    .supplier-suggestion:hover, .supplier-suggestion:focus-visible {
+      border-color: rgba(110,231,210,.42);
+      background: rgba(110,231,210,.09);
+      outline: none;
+    }
+    .supplier-suggestion strong { font-size: 15px; line-height: 1.25; color: var(--ink); }
+    .supplier-suggestion span { color: var(--muted); font-size: 13px; line-height: 1.35; }
+    .supplier-suggestion mark {
+      padding: 0;
+      background: transparent;
+      color: var(--accent-strong);
+      font-weight: 800;
+    }
+    .supplier-suggestion-empty {
+      padding: 12px;
+      color: var(--muted);
+      font-size: 13px;
+    }
     .filter-actions { width: 272px; display: flex; justify-content: flex-end; gap: 8px; flex-wrap: nowrap; }
     .filter-actions .ghost-button, .filter-actions .primary-button { min-height: 36px; padding: 8px 12px; }
     .sidebar {
@@ -768,6 +817,60 @@
     .drawer-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 18px; }
     .drawer-list { display: grid; gap: 10px; }
     .drawer-item { padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: rgba(255,255,255,.035); color: var(--muted); }
+    .issue-panel { display: grid; gap: 14px; }
+    .issue-toolbar { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: start; }
+    .issue-summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+    .issue-metric { min-width: 0; padding: 12px; border: 1px solid var(--line); border-radius: 8px; background: rgba(255,255,255,.035); display: grid; gap: 4px; }
+    .issue-metric span { color: var(--muted); font-size: 12px; font-weight: 800; }
+    .issue-metric strong { color: var(--accent-strong); font-size: 20px; line-height: 1.15; }
+    .issue-filters { display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+    .issue-filters select, .issue-filters input, .issue-clear-button { min-height: 38px; max-width: 180px; }
+    .issue-clear-button { padding: 0 14px; border: 1px solid rgba(110,231,210,.2); border-radius: 8px; color: var(--accent-strong); background: rgba(110,231,210,.07); font-weight: 900; cursor: pointer; }
+    .issue-clear-button:hover, .issue-clear-button:focus-visible { border-color: rgba(110,231,210,.48); background: rgba(110,231,210,.12); outline: none; }
+    .issue-page-size { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 12px; font-weight: 800; }
+    .issue-page-size select { min-width: 86px; }
+    .issue-list { display: grid; gap: 10px; padding-right: 4px; }
+    .issue-card { display: grid; grid-template-columns: minmax(260px, 0.82fr) minmax(360px, 1.18fr); gap: 18px; padding: 14px; border: 1px solid var(--line); border-radius: 8px; background: rgba(255,255,255,.03); align-items: start; }
+    .issue-card-main { min-width: 0; display: grid; gap: 8px; }
+    .issue-card-title { display: flex; justify-content: space-between; gap: 12px; color: var(--ink); }
+    .issue-card-title strong, .issue-style { overflow-wrap: anywhere; }
+    .issue-card-title span { color: var(--muted); white-space: nowrap; }
+    .issue-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+    .issue-tags span { min-height: 24px; padding: 4px 8px; border-radius: 999px; border: 1px solid rgba(110,231,210,.16); color: var(--accent-strong); font-size: 12px; font-weight: 800; background: rgba(110,231,210,.07); }
+    .issue-style { color: var(--ink); font-weight: 900; }
+    .issue-card p { color: var(--muted); line-height: 1.55; }
+    .issue-card p.issue-defect {
+      margin-top: 2px;
+      padding-left: 10px;
+      border-left: 3px solid var(--accent-strong);
+      color: #fcfcfc;
+      font-size: 15px;
+      font-weight: 900;
+    }
+    .issue-card p.issue-defect span {
+      display: inline-flex;
+      margin-right: 8px;
+      padding: 2px 7px;
+      border-radius: 999px;
+      background: #f88030;
+      color: #000000;
+      font-size: 11px;
+      font-weight: 900;
+    }
+    .issue-images { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 8px; align-content: start; justify-self: stretch; }
+    .issue-image-button { aspect-ratio: 1 / 1; padding: 0; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: rgba(255,255,255,.04); cursor: zoom-in; }
+    .issue-image-button img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .issue-image-more, .issue-image-missing { min-height: 72px; border: 1px dashed var(--line); border-radius: 8px; display: grid; place-items: center; color: var(--muted); font-weight: 800; }
+    .issue-image-more { cursor: zoom-in; background: rgba(110,231,210,.045); }
+    .issue-image-more:hover, .issue-image-more:focus-visible { color: var(--accent-strong); border-color: rgba(110,231,210,.42); outline: none; }
+    .issue-drawer-image { width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--line); display: block; }
+    .issue-single-image-button { width: 100%; padding: 0; border: 0; background: transparent; cursor: zoom-out; }
+    .issue-single-image-button:focus-visible { outline: 2px solid var(--accent-strong); outline-offset: 4px; border-radius: 8px; }
+    .issue-drawer-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; }
+    .issue-drawer-grid button { padding: 0; border: 0; background: transparent; cursor: zoom-in; }
+    .issue-drawer-grid img { width: 100%; aspect-ratio: 1 / 1; object-fit: cover; border-radius: 8px; border: 1px solid var(--line); background: rgba(255,255,255,.04); display: block; }
+    .empty-state { padding: 18px; border: 1px dashed var(--line); border-radius: 8px; color: var(--muted); text-align: center; }
+    .issue-pager { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-top: 2px; color: var(--muted); }
     .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
     @media (max-width: 1180px) {
       main { gap: 20px; }
@@ -801,6 +904,12 @@
       h1 { font-size: 30px; }
       .insight-grid { grid-template-columns: 1fr; }
       .style-row { grid-template-columns: 1fr; align-items: start; }
+      .issue-toolbar { grid-template-columns: 1fr; }
+      .issue-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .issue-filters { justify-content: stretch; }
+      .issue-filters select, .issue-filters input { max-width: none; flex: 1 1 160px; }
+      .issue-card { grid-template-columns: 1fr; }
+      .issue-images { grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); }
       .style-row strong { text-align: left; }
       .brand-grid { grid-template-columns: 1fr; }
       .donut-chart { grid-template-columns: 1fr; }
@@ -870,7 +979,7 @@
       <div class="platform-identity">
         <img class="platform-mark" src="../../assets/jingtang-warehouse-logo-clear.png" alt="井唐仓储" />
         <div class="platform-title">
-          <strong>仓库运营管理平台</strong>
+          <strong>仓储运营管理平台</strong>
           <div class="platform-breadcrumb"><span>首页</span><span>/</span><span>入库管理</span></div>
         </div>
       </div>
@@ -900,8 +1009,10 @@
           </div>
           <div class="filter-field supplier-field">
             <label for="supplierSearch">供应商</label>
-            <input id="supplierSearch" type="search" list="supplierOptions" placeholder="搜索供应商" />
-            <datalist id="supplierOptions"></datalist>
+            <div class="supplier-combobox">
+              <input id="supplierSearch" type="search" placeholder="搜索供应商" autocomplete="off" aria-controls="supplierSuggestions" aria-expanded="false" />
+              <div class="supplier-suggestions" id="supplierSuggestions" role="listbox"></div>
+            </div>
           </div>
           <div class="filter-field business-field">
             <label for="businessFilter">业务类型</label>
@@ -918,7 +1029,6 @@
           <div class="filter-notice" id="filterNotice"></div>
           <div class="filter-actions">
             <button class="ghost-button" type="button" id="clearFilters">重置筛选</button>
-            <button class="ghost-button" type="button" id="importButton">导入数据</button>
             <button class="primary-button" type="button" id="exportButton">导出结果</button>
           </div>
         </div>
@@ -1016,32 +1126,35 @@
         </div>
       </section>
 
-      <section class="panel">
+      <section class="panel issue-panel">
         <div class="panel-head">
-          <div><span class="panel-label">Coverage</span><h2>供应商覆盖与时段</h2></div>
+          <div><span class="panel-label">Quality Issues</span><h2>大货问题汇总</h2></div>
         </div>
-        <div class="table-wrap coverage-table">
-          <table>
-            <thead><tr><th>供应商</th><th>品牌</th><th>业务类型</th><th>入库数量</th><th>入库单数</th><th>款数</th><th>首笔入仓</th><th>末笔入仓</th></tr></thead>
-            <tbody id="supplierCoverageBody"></tbody>
-          </table>
+        <div class="issue-toolbar">
+          <div class="issue-summary" id="issueSummary"></div>
+          <div class="issue-filters">
+            <select id="issueBrand" aria-label="Issue brand"></select>
+            <select id="issueAttribute" aria-label="问题属性"></select>
+            <select id="issueFactory" aria-label="问题工厂"></select>
+            <label class="issue-page-size">每页
+              <select id="issuePageSize" aria-label="问题记录每页数量">
+                <option value="5">5条</option>
+                <option value="10">10条</option>
+                <option value="20">20条</option>
+                <option value="50">50条</option>
+              </select>
+            </label>
+            <input id="issueKeyword" type="search" placeholder="搜索工厂 / 款号 / 瑕疵" />
+            <button class="issue-clear-button" type="button" id="issueClearFilters">清空筛选</button>
+          </div>
         </div>
-      </section>
-
-      <section class="panel">
-        <div class="panel-head">
-          <div><span class="panel-label">Supplier</span><h2>供应商入库排行</h2></div>
-          <select id="supplierSort">
-            <option value="quantity">按入库数量</option>
-            <option value="orders">按入库单数</option>
-            <option value="styles">按款数</option>
-          </select>
-        </div>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>排名</th><th>供应商</th><th>品牌</th><th>入库数量</th><th>入库单数</th><th>款数</th><th>占比</th></tr></thead>
-            <tbody id="supplierBody"></tbody>
-          </table>
+        <div class="issue-list" id="issueBody"></div>
+        <div class="issue-pager">
+          <span id="issuePagerInfo"></span>
+          <div class="action-row">
+            <button class="ghost-button" type="button" id="issuePrevPage">上一页</button>
+            <button class="ghost-button" type="button" id="issueNextPage">下一页</button>
+          </div>
         </div>
       </section>
 
@@ -1076,6 +1189,35 @@
 
       <section class="panel">
         <div class="panel-head">
+          <div><span class="panel-label">Coverage</span><h2>供应商覆盖与时段</h2></div>
+        </div>
+        <div class="table-wrap coverage-table">
+          <table>
+            <thead><tr><th>供应商</th><th>品牌</th><th>业务类型</th><th>入库数量</th><th>入库单数</th><th>款数</th><th>首笔入仓</th><th>末笔入仓</th></tr></thead>
+            <tbody id="supplierCoverageBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <div><span class="panel-label">Supplier</span><h2>供应商入库排行</h2></div>
+          <select id="supplierSort">
+            <option value="quantity">按入库数量</option>
+            <option value="orders">按入库单数</option>
+            <option value="styles">按款数</option>
+          </select>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>排名</th><th>供应商</th><th>品牌</th><th>入库数量</th><th>入库单数</th><th>款数</th><th>占比</th></tr></thead>
+            <tbody id="supplierBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
           <div><span class="panel-label">Import</span><h2>最近导入状态</h2></div>
         </div>
         <aside class="import-status">
@@ -1094,6 +1236,7 @@
     <div id="drawerContent"></div>
   </aside>
   <script src="../../assets/inbound-data.js"></script>
+  <script src="../../assets/inbound-issues.js"></script>
   <script src="../../assets/inbound-dashboard.js"></script>
 </body>
 </html>
